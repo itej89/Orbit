@@ -23,7 +23,7 @@ logger.setLevel(logging.INFO)
 # -----------------------------
 # Time constants
 # -----------------------------
-MPC_DT = 0.4       
+MPC_DT = 0.3       
 RATE_WINDOW = 0.5  
 
 # -----------------------------
@@ -44,9 +44,10 @@ class WeightedMovingAverager:
         return 0.0 if self.value is None else float(self.value)
     
 class RateEstimator:
-    """Generic rate estimator (requests/sec) using a sliding window / EWMA style."""
-    def __init__(self, window_sec=0.5):
+    """Generic rate estimator (requests/sec) using sliding window + EWMA smoothing."""
+    def __init__(self, window_sec=0.5, alpha=0.3):
         self.window = window_sec
+        self.alpha = alpha  # smoothing factor
         self.count = 0
         self.last = time.monotonic()
         self.rate = 0.0
@@ -55,8 +56,12 @@ class RateEstimator:
         """Increment counter (called when an event occurs)."""
         now = time.monotonic()
         self.count += n
-        if now - self.last >= self.window:
-            self.rate = self.count / (now - self.last)
+        elapsed = now - self.last
+
+        if elapsed >= self.window:
+            instant_rate = self.count / elapsed
+            # EWMA smoothing
+            self.rate = self.alpha * instant_rate + (1 - self.alpha) * self.rate
             self.count = 0
             self.last = now
 
@@ -70,51 +75,76 @@ class RateEstimator:
 async def mpc_control_loop(app):
     """
     MPC predicts per-node weights based on
-    fluid backlog, arrival rate, and service rate.
+    normalized backlog, smoothed arrival rate, and smoothed service rate.
     """
-    H = 5
-    target_q = 6
-    min_w, max_w = 0.3, 1.5
+    H = 20
+    min_w, max_w = 0.1, 3.0
     eps = 1e-6
+    weight_alpha = 0.25  # reduced smoothing factor for smoother updates
+    max_delta = 0.1      # max weight change per step
 
     while True:
         inflight = app.state.metrics["decode_inflight"]
+        # Smoothed arrival rate
         arrival_rate = app.state.metrics["arrival_rate"].get()
         service_rate = app.state.metrics["service_rate"]
 
         current_weights = app.state.policy["node_weights"]
         total_weight = max(sum(current_weights.values()), eps)
 
+        # --- Normalization of queues ---
+        if inflight:
+            avg_q = max(1.0, sum(inflight.values()) / len(inflight))
+            q_scaled = {node: q / avg_q for node, q in inflight.items()}
+        else:
+            q_scaled = {}
+
+        target_q_scaled = 1.0  # normalized target
+
         new_weights = {}
 
-        for wid, q0 in inflight.items():
-            mu = service_rate.get(wid, 0.5)
+        for wid, q0 in q_scaled.items():
+            if service_rate.get(wid) is None:
+                continue
+            # Smoothed service rate
+            mu = service_rate[wid].get()
 
-            # MPC variables: w = routing weight, q = fluid backlog
+            # MPC variables: w = routing weight, q = scaled fluid backlog
             w = cp.Variable(H)
             q = cp.Variable(H + 1)
-            constraints = [q[0] == q0]  # initial state
+            constraints = [q[0] == q0]  # initial scaled state
             cost = 0
 
             for k in range(H):
                 p_i = w[k] / (total_weight + eps)
                 constraints += [
-                    q[k + 1] == q[k] + MPC_DT * (arrival_rate * p_i - mu),
+                    q[k + 1] == q[k] + MPC_DT * (arrival_rate * p_i - mu) / max(avg_q, eps),
                     q[k + 1] >= 0,
                     w[k] >= min_w,
                     w[k] <= max_w,
                 ]
-                cost += cp.square(q[k + 1] - target_q) + 0.5 * cp.square(w[k] - 1.0)
+                cost += cp.square(q[k + 1] - target_q_scaled) + 0.07 * cp.square(w[k] - 1.0)
 
             prob = cp.Problem(cp.Minimize(cost), constraints)
 
             try:
                 prob.solve(solver=cp.OSQP, warm_start=True)
-                new_weights[wid] = float(w.value[0])
+                w_new = float(w.value[0])
+                w_old = current_weights.get(wid, 1.0)
+
+                # --- Smoothed weight update with delta limit ---
+                delta = w_new - w_old
+                delta = max(min(delta, max_delta), -max_delta)  # limit change per step
+                w_smooth = w_old + weight_alpha * delta
+
+                # Clamp final weight
+                new_weights[wid] = min(max(w_smooth, min_w), max_w)
             except Exception:
                 new_weights[wid] = current_weights.get(wid, 1.0)
 
+        # Update global weights
         app.state.policy["node_weights"].update(new_weights)
+
         await asyncio.sleep(MPC_DT)
 
 # -----------------------------

@@ -19,7 +19,7 @@ async def send_request(client, wid):
         )
         r.raise_for_status()
         latency = time.monotonic() - t0
-        print(f"[worker {wid}] latency={latency:.3f}s")
+        # print(f"[worker {wid}] latency={latency:.3f}s")
 
 
 async def main():
