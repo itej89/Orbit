@@ -233,10 +233,24 @@ def weighted_po2(app, service):
 
     return a if score_a <= score_b else b
 
+def weighted_po2_vanilla(app, service):
+    pool = app.state.decode_clients if service == "decode" else app.state.prefill_clients
+    inflight = app.state.metrics[
+        "decode_inflight" if service == "decode" else "prefill_inflight"
+    ]
+    a, b = random.sample(pool, 2)
+    wa = app.state.policy["node_weights"].get(a["id"], 1.0)
+    wb = app.state.policy["node_weights"].get(b["id"], 1.0)
+
+    score_a = inflight[a["id"]]
+    score_b = inflight[b["id"]]
+
+    return a if score_a <= score_b else b
+
 def select_client(app, service):
     if app.state.policy["routing_mode"] == "rr":
         return weighted_rr(app, service)
-    return weighted_po2(app, service)
+    return weighted_po2_vanilla(app, service)
 
 # -----------------------------
 # Request handler

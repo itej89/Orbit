@@ -56,6 +56,10 @@ Following graph shows how the controller maintains stable throughput by load bal
 
 ### Instruciton to perform the simulation
 ```
+# Create a container
+docker run --rm -it   --network=host   --group-add video   --ipc=host   --cap-add=SYS_PTRACE   --privileged=true   --shm-size=64GB   --device=/dev/kfd   --device=/dev/dri   --cap-add=IPC_LOCK   --ulimit memlock=-1   --device=/dev/infiniband   --device=/dev/infiniband/rdma_cm   -v /sys/class/infiniband:/sys/class/infiniband:ro   -v /sys/class/infiniband_verbs:/sys/class/infiniband_verbs:ro   --security-opt seccomp=unconfined   -v $HOME:$HOME   --name 20251217_rocm7.0_ubuntu22.04_py3.10_pytorch_release_2.8.0_rc1   rocm/7.0:rocm7.0_ubuntu22.04_py3.10_pytorch_release_2.8.0_rc1 /bin/bash
+
+
 # Start all nodes
 /Orbit/simulation# python ./prefill_server.py  --port 8100 --delay 0.005
 /Orbit/simulation# python prefill_server.py    --port 8101 --delay 0.03
