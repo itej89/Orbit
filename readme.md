@@ -51,7 +51,10 @@ $\{w_0​,w_1​,…,w_{H−1}​\}$ - Node Weight Trajectory
 
 ### Controller Stability on a simulation of 2P2D with variable decoder server delays
 Following graph shows how the controller maintains stable throughput by load balancing across servers for heterogenous workloads. In case of LLMs the heterogenity arrives from the variable promp lengths and generation legths, GPU capacity, KV Cache distribution etc.,.
+##### Weighted PO2 with MCP
 <img width="2560" height="1332" alt="OrbitStabilityTest" src="https://github.com/user-attachments/assets/262e0a61-63e8-4efc-b428-566c5d63cdf5" />
+##### PO2 without MCP
+<img width="2560" height="1332" alt="PO2" src="https://github.com/user-attachments/assets/d69cd047-193a-4bfa-95ad-784c06ff7aef" />
 
 
 ### Instruciton to perform the simulation
