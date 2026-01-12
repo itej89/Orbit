@@ -1,4 +1,4 @@
-## Model Predictive Controller Augmentation for Power of 2 and Round Robin Routing Algorithms 
+## Model Predictive Controller Augmented for Power-of-2 Algorithm
 This repository contains verfication code for MPC augmented routing algorithms for VLLM
 
 ### Objective
