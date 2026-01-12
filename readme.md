@@ -54,3 +54,19 @@ Following graph shows how the controller maintains stable throughput by load bal
 <img width="2560" height="1332" alt="OrbitStabilityTest" src="https://github.com/user-attachments/assets/262e0a61-63e8-4efc-b428-566c5d63cdf5" />
 
 
+### Instruciton to perform the simulation
+```
+# Start all nodes
+/Orbit/simulation# python ./prefill_server.py  --port 8100 --delay 0.005
+/Orbit/simulation# python prefill_server.py    --port 8101 --delay 0.03
+/Orbit/simulation# python ./decode_server.py   --port 8200 --token-delay 0.01
+/Orbit/simulation# python ./decode_server.py   --port 8201 --token-delay 0.05
+
+# Start the Router
+/orbit# python ./router.py  --prefiller-hosts  127.0.0.1  127.0.0.1  --prefiller-ports 8100 8101   --decoder-hosts 127.0.0.1  127.0.0.1   --decoder-ports 8200 8201
+
+# Benchmark and read the results
+/Orbit/simulation# python benchmark.py
+```
+
+
