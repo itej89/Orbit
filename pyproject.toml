@@ -1,0 +1,36 @@
+
+# pyproject.toml
+[project]
+name = "orbit"
+version = "0.1.0"
+description = "Orbit project"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }  # change if needed
+authors = [{ name = "Kiran Tej" }]
+
+# Optional runtime deps:
+dependencies = ["httpx", "cvxpy", "fastapi", "pytest-asyncio", "uvicorn"]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]         # ensures src is on sys.path during tests
+addopts = "-ra -q"           # show summary of skips/fails; quiet test output
+
+# Optional: tooling configs (ruff, mypy, etc.)
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+

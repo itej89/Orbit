@@ -17,13 +17,15 @@ MPC compliments these drawbacks through future load prediction, per-node-capacit
 
 ## Model Predictive Controller
 ### System Model
-Below is a simplified system model to estimate the queue length
-$$ q_{k+1}​=q_k+\hat{a​}−w_k​ $$
+Below is a simplified system model to estimate the queue length of individual nodes
+$$ q_i(k+1)​=q_i(k)+\Delta t(\hat{a​}{p_i}(k)−\mu_i(k))​ $$
 
-Where <br>
-$q_k$ is the predicted queue length at step k. <br>
-$w_k$ is the control decision (“weight”) you’ll apply at step k, which effectively drains the queue <br>
-$\hat{a​}$ is the request arrival rate <br>
+Where, for each node i <br>
+$q_i(k)$ is the predicted queue length at step k. <br>
+$\mu_i(k)$ is the service rate that is continuously estimated <br>
+$\hat{a​}$ is the global request arrival rate <br>
+$p_i(k)$ is the request arrival rate of node i approximated as $p_i(k)$=$\frac{w_i}{\sum_{j=1}^{n}{w_j}}$ <br>
+$\Delta t$ is the controller rate
 
 ### Constraints
 
