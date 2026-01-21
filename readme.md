@@ -19,9 +19,9 @@ MPC compliments these drawbacks through future load prediction, per-node-capacit
 #### System Model
 Below is a simplified system model to estimate the queue length of individual nodes <br>
 
-```mat
+$$
 q_i(k+1) = q_i(k) + \Delta t(\hat{a}_{p_i}(k) - \mu_i(k))
-```
+$$
 
 
 Where, for each node i <br>
