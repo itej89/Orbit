@@ -25,11 +25,11 @@ $$
 
 
 Where, for each node i <br>
-$q_i(k)$ is the predicted queue length at step k. <br>
-$\mu_i(k)$ is the service rate that is continuously estimated <br>
-$\hat{a​}$ is the global request arrival rate <br>
-$p_i(k)$ is the request arrival rate of node i approximated as $p_i(k)$=$\frac{w_i}{\sum_{j=1}^{n}{w_j}}$ <br>
-$\Delta t$ is the controller rate
+$ q_i(k) $ is the predicted queue length at step k. <br>
+$ \mu_i(k) $ is the service rate that is continuously estimated <br>
+$ \hat{a​} $ is the global request arrival rate <br>
+$ p_i(k) $ is the request arrival rate of node i approximated as $p_i(k)$=$\frac{w_i}{\sum_{j=1}^{n}{w_j}}$ <br>
+$ \Delta t $ is the controller rate
 
 #### Constraints
 
