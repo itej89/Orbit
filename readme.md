@@ -70,7 +70,7 @@ Following graph shows how the controller maintains stable throughput by load bal
 2. The latency variance appears to be narrower
 
 ##### Next Steps:
-The simulation is highly simplified the real time changes in the server service rates.  This makes the above results to be kept under speculation. 
+The simulation has highly simplified the real time changes in the server service rates.  This makes the above results to be kept under speculation. 
 1. Verify the PO2 implementaiton against VLLM Router library
 2. Re-run on actual PDDisagg workloads and verify the results
 
