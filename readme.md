@@ -44,7 +44,9 @@ $H$ - Future Queue Legth Horizon <br>
 $Target\_q$ -Target queue value that controller should achieve
 
 #### Objective function
-$\underbrace{(q_{k+1} - Target_q)^2}_{queue\ tracking} + \underbrace{0.5(w_k-1)^2}_{regularization}$
+$$
+\underbrace{(q_{k+1} - Target_q)^2}_{queue\ tracking} + \underbrace{0.5(w_k-1)^2}_{regularization}
+$$
 <br><br>Goals:
 <br>1.  Keep the predicted queue $q_{k+1}$​ close to $H$
 <br>2.  Keep $w_k$ centered and close to 1
