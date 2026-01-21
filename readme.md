@@ -18,7 +18,11 @@ MPC compliments these drawbacks through future load prediction, per-node-capacit
 ### Model Predictive Controller
 #### System Model
 Below is a simplified system model to estimate the queue length of individual nodes <br>
-$ q_i(k+1)​=q_i(k)+\Delta t(\hat{a​}{p_i}(k)−\mu_i(k))​ $
+
+```mat
+q_i(k+1) = q_i(k) + \Delta t(\hat{a}_{p_i}(k) - \mu_i(k))
+```
+
 
 Where, for each node i <br>
 $q_i(k)$ is the predicted queue length at step k. <br>
