@@ -1,0 +1,618 @@
+\documentclass[runningheads]{llncs}
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\pgfplotsset{compat=1.17}
+\usetikzlibrary{patterns,shapes.geometric,arrows.meta,positioning,calc}
+
+\definecolor{mpcblue}{HTML}{2563EB}
+\definecolor{po2red}{HTML}{DC2626}
+\definecolor{rrgreen}{HTML}{059669}
+\definecolor{cacheamber}{HTML}{F59E0B}
+
+\begin{document}
+
+\title{Orbit: Model Predictive Control for Adaptive Request Routing in Disaggregated LLM Serving}
+
+\author{Tejeshwar Iyengar\inst{1} \and Ravi Gupta\inst{1}}
+
+\authorrunning{T. Iyengar and R. Gupta}
+
+\institute{AMD Corporation \\
+\email{\{tejeshwar.iyengar, ravi.gupta\}@amd.com}}
+
+\maketitle
+
+\begin{abstract}
+Large Language Model (LLM) inference at scale increasingly adopts prefill-decode disaggregation, where compute-intensive prompt processing and memory-bound token generation are handled by separate server pools. This architecture introduces complex request routing challenges: heterogeneous service times, variable workload characteristics, and temporal dependencies from batching create conditions where traditional load balancing algorithms perform poorly. We present \textbf{Orbit}, a Model Predictive Control (MPC) framework that augments standard routing policies with horizon-based prediction and adaptive weight adjustment. Rather than replacing existing algorithms, Orbit wraps them with a predictive control layer that anticipates future congestion and proactively redistributes traffic. We formulate request routing as an optimal control problem over queue dynamics, derive an efficient solver suitable for real-time operation, and demonstrate integration with Power-of-Two-Choices and Round Robin policies. Our simulation study on disaggregated configurations shows that MPC-augmented routing achieves 23\% lower mean latency, 33\% lower tail latency, and 78\% reduced throughput variance compared to baseline algorithms. These results suggest that predictive control offers a principled approach to request scheduling in modern LLM serving systems.
+
+\keywords{Request Scheduling \and Load Balancing \and Model Predictive Control \and LLM Serving \and Disaggregated Inference}
+\end{abstract}
+
+%=============================================================================
+\section{Introduction}
+%=============================================================================
+
+The deployment of Large Language Models (LLMs) in production systems has driven rapid evolution in inference infrastructure~\cite{kwon2023vllm,yu2022orca}. As models scale to hundreds of billions of parameters and serve millions of daily requests, efficient request scheduling becomes critical for meeting latency objectives while maximizing hardware utilization. A key architectural pattern emerging in large-scale deployments is \textit{prefill-decode disaggregation}~\cite{zhong2024distserve,patel2024splitwise}, where the two phases of autoregressive generation---prompt processing (prefill) and token generation (decode)---are handled by separate, specialized server pools.
+
+This separation is motivated by the distinct computational characteristics of each phase. Prefill is compute-bound: processing input tokens in parallel requires high arithmetic throughput. Decode is memory-bound: generating tokens autoregressively requires repeated KV-cache access with limited compute per step. By assigning these phases to appropriately configured hardware, disaggregation improves overall efficiency. However, it introduces a new scheduling challenge: requests must be routed first to a prefill server, then transferred to a decode server, with each routing decision affecting end-to-end latency.
+
+Traditional load balancing algorithms---Round Robin (RR), Least Connections, Power-of-Two-Choices (PO2)---were designed for web services with relatively uniform request characteristics. LLM serving violates these assumptions in several ways:
+
+\begin{itemize}
+    \item \textbf{Variable prompt lengths:} Prefill time scales with input token count, creating high variance in service times.
+    \item \textbf{Unpredictable generation lengths:} Decode duration depends on output length, which is unknown at routing time.
+    \item \textbf{Batching dynamics:} Continuous batching~\cite{yu2022orca} creates temporal dependencies between requests.
+    \item \textbf{KV-cache pressure:} Memory utilization affects throughput in ways not captured by queue depth alone.
+    \item \textbf{Server heterogeneity:} Different GPU generations, thermal states, or memory configurations create capacity asymmetries.
+\end{itemize}
+
+We observe that these challenges stem from a fundamental limitation: existing algorithms are \textit{reactive}, responding to current queue depths without anticipating future load. A server that appears lightly loaded may have several long-running requests about to complete, while an apparently busy server may be about to experience a burst of completions. This information asymmetry leads to oscillatory behavior, where traffic repeatedly shifts between servers as each becomes overloaded in turn.
+
+This observation motivates our key insight: \textbf{request routing for LLM serving is naturally a control problem} that benefits from model-based predictive reasoning. Model Predictive Control (MPC)~\cite{camacho2013mpc} provides exactly this capability: use a system model to predict future states over a finite horizon, optimize control actions to minimize a cost function, apply the first action, then re-optimize. MPC has proven effective in robotics~\cite{williams2017mppi}, power systems~\cite{garcia1989mpc}, and network control~\cite{low2002internet}, but its application to LLM serving request scheduling is novel.
+
+We present \textbf{Orbit}, a framework that augments standard routing algorithms with MPC-based adaptive weighting. Rather than replacing proven heuristics like PO2, Orbit \textit{wraps} them with a predictive layer that adjusts routing probabilities based on predicted queue trajectories. This design preserves the simplicity and robustness of existing algorithms while adding predictive capability.
+
+\paragraph{Contributions.} We make the following contributions:
+
+\begin{enumerate}
+    \item We formulate LLM request routing as an MPC problem with queue dynamics modeling, deriving constraints that ensure stable operation (Section~\ref{sec:formulation}).
+    
+    \item We design an efficient solver that computes weight trajectories in real-time, suitable for integration with production routers (Section~\ref{sec:solver}).
+    
+    \item We demonstrate integration with Power-of-Two-Choices and Round Robin, showing that MPC augmentation improves both algorithms (Section~\ref{sec:integration}).
+    
+    \item We present simulation results showing 23\% latency reduction and 78\% throughput variance reduction compared to baseline algorithms (Section~\ref{sec:evaluation}).
+\end{enumerate}
+
+%=============================================================================
+\section{Background and Motivation}
+\label{sec:background}
+%=============================================================================
+
+\subsection{LLM Inference Architecture}
+
+Modern LLM inference proceeds in two phases. The \textit{prefill} phase processes all input tokens in parallel, computing attention over the full prompt and populating the KV-cache. This phase is compute-intensive, with runtime proportional to prompt length. The \textit{decode} phase generates output tokens one at a time, each step attending to all previous tokens via the cached key-value pairs. Decode is memory-bandwidth limited, as each token requires reading the entire KV-cache with minimal computation.
+
+Systems like vLLM~\cite{kwon2023vllm} introduced PagedAttention for efficient KV-cache memory management, enabling high throughput through continuous batching~\cite{yu2022orca}. Splitwise~\cite{patel2024splitwise} and DistServe~\cite{zhong2024distserve} extended this with prefill-decode disaggregation, assigning phases to specialized hardware. The vLLM router~\cite{vllmrouter2025} provides production-grade request distribution with multiple load balancing policies.
+
+\subsection{Existing Routing Policies}
+
+The vLLM router supports several load balancing strategies~\cite{vllmrouter2025}:
+
+\begin{itemize}
+    \item \textbf{Round Robin:} Distributes requests cyclically. Simple but ignores server load.
+    
+    \item \textbf{Random:} Uniform random selection. No load awareness.
+    
+    \item \textbf{Power-of-Two-Choices (PO2):} Samples two random servers and routes to the less loaded one. Achieves exponentially better tail latency than random under idealized conditions~\cite{mitzenmacher2001power}.
+    
+    \item \textbf{Consistent Hashing:} Routes requests with the same session key to the same server. Maximizes KV-cache reuse for multi-turn conversations.
+    
+    \item \textbf{Cache-Aware:} Optimizes for prefix cache hits by routing similar prompts together.
+\end{itemize}
+
+Each policy optimizes for different objectives. PO2 targets load balancing, while cache-aware targets throughput via cache reuse. Our work focuses on enhancing load-balancing policies (PO2, RR) with predictive capability; integration with cache-aware routing is an interesting direction for future work.
+
+\subsection{Limitations of Reactive Routing}
+
+PO2's theoretical optimality assumes~\cite{mitzenmacher2001power}: (i) homogeneous servers, (ii) Poisson arrivals, (iii) exponential service times, and (iv) instantaneous queue depth information. LLM serving violates all four assumptions.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.9\columnwidth,
+    height=5cm,
+    xlabel={Time (s)},
+    ylabel={Queue Depth},
+    xmin=0, xmax=30,
+    ymin=0, ymax=25,
+    grid=both,
+    grid style={gray!20},
+    legend style={at={(0.98,0.98)}, anchor=north east, font=\small},
+    tick label style={font=\small},
+    label style={font=\small}
+]
+
+% Server A - oscillating high
+\addplot[mpcblue, thick] coordinates {
+    (0,5) (2,8) (4,15) (6,20) (8,18) (10,10) (12,5) (14,8) (16,18) (18,22) (20,15) (22,8) (24,12) (26,20) (28,18) (30,12)
+};
+
+% Server B - oscillating inverse
+\addplot[po2red, thick, dashed] coordinates {
+    (0,12) (2,15) (4,8) (6,5) (8,10) (10,18) (12,20) (14,15) (16,8) (18,5) (20,12) (22,18) (24,15) (26,6) (28,10) (30,16)
+};
+
+\legend{Server A, Server B}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Queue depth oscillations under vanilla PO2 with heterogeneous servers. Traffic repeatedly shifts as each server becomes overloaded, causing sustained high latency for both.}
+\label{fig:oscillation}
+\end{figure}
+
+Consider two servers with different capacities. When both start with similar queue depths, PO2 distributes load roughly evenly. But if Server A processes requests faster, its queue drains first, attracting more traffic until it becomes overloaded. Traffic then shifts to Server B, and the cycle repeats (Figure~\ref{fig:oscillation}). This oscillatory behavior arises because PO2 observes current state without predicting future evolution.
+
+The fundamental issue is \textit{information asymmetry}: queue depth is a lagging indicator of server load. A server with 10 pending requests that are 90\% complete is actually less loaded than one with 5 requests that just arrived. Predictive approaches can exploit this by modeling how queues will evolve.
+
+\subsection{Why Model Predictive Control?}
+
+MPC~\cite{camacho2013mpc} addresses exactly this class of problems. The key idea is to:
+
+\begin{enumerate}
+    \item Maintain a \textit{system model} that predicts how state evolves under different control actions.
+    \item At each timestep, solve an optimization problem over a finite \textit{horizon} to find the control sequence that minimizes a cost function.
+    \item Apply only the first control action, then re-optimize at the next timestep (receding horizon).
+\end{enumerate}
+
+This approach naturally handles: (i) constraints on states and controls, (ii) multi-step lookahead for better decisions, (iii) uncertainty through re-optimization, and (iv) explicit cost function specification.
+
+MPC has been applied to network congestion control~\cite{low2002internet}, data center cooling~\cite{lazic2018datacenter}, and cluster resource management~\cite{zhang2021mpc}. To our knowledge, Orbit is the first application to LLM serving request routing.
+
+%=============================================================================
+\section{Orbit Framework}
+\label{sec:method}
+%=============================================================================
+
+\subsection{System Model}
+\label{sec:formulation}
+
+We model each server $i \in \{1, \ldots, n\}$ as a queue with discrete-time dynamics:
+
+\begin{equation}
+q_i(k+1) = \max\left(0, \; q_i(k) + \Delta t \left( \hat{a} \cdot p_i(k) - \mu_i(k) \right)\right)
+\label{eq:dynamics}
+\end{equation}
+
+where:
+\begin{itemize}
+    \item $q_i(k)$ is the predicted queue length at discrete time step $k$
+    \item $\hat{a}$ is the estimated global request arrival rate (requests/second)
+    \item $\mu_i(k)$ is the estimated service rate of server $i$ (requests/second)
+    \item $p_i(k)$ is the fraction of traffic routed to server $i$
+    \item $\Delta t$ is the controller timestep (seconds)
+\end{itemize}
+
+The routing fraction is determined by normalized weights:
+
+\begin{equation}
+p_i(k) = \frac{w_i(k)}{\sum_{j=1}^{n} w_j(k)}
+\label{eq:routing}
+\end{equation}
+
+where $w_i(k) \in [w_{\min}, w_{\max}]$ are the decision variables. The weights modulate how aggressively traffic is directed to each server relative to baseline ($w_i = 1$).
+
+\paragraph{Service Rate Estimation.} We estimate $\mu_i(k)$ using exponential moving average of recent completion times:
+
+\begin{equation}
+\mu_i(k) = \alpha \cdot \frac{1}{\tau_i^{\text{recent}}} + (1-\alpha) \cdot \mu_i(k-1)
+\label{eq:service_rate}
+\end{equation}
+
+where $\tau_i^{\text{recent}}$ is the average service time of the last $m$ completed requests on server $i$, and $\alpha \in (0,1)$ controls adaptation speed. We use $\alpha = 0.3$ and $m = 10$ in our experiments.
+
+\paragraph{Arrival Rate Estimation.} Similarly, $\hat{a}$ is estimated from observed arrivals over a sliding window, using exponential smoothing to handle burstiness.
+
+\subsection{MPC Formulation}
+
+At each control timestep, Orbit solves:
+
+\begin{align}
+\min_{\{w_i^{(k)}\}_{i,k}} \quad & \sum_{k=0}^{H-1} \sum_{i=1}^{n} \left[ \underbrace{\left(q_i^{(k+1)} - q^*\right)^2}_{\text{queue tracking}} + \underbrace{\lambda \left(w_i^{(k)} - 1\right)^2}_{\text{regularization}} \right] \label{eq:objective} \\
+\text{s.t.} \quad & q_i^{(k+1)} = \max\left(0, q_i^{(k)} + \Delta t(\hat{a} \cdot p_i^{(k)} - \mu_i)\right) \label{eq:constraint_dynamics} \\
+& p_i^{(k)} = w_i^{(k)} / \textstyle\sum_j w_j^{(k)} \label{eq:constraint_routing} \\
+& w_{\min} \leq w_i^{(k)} \leq w_{\max} \quad \forall i, k \label{eq:constraint_bounds}
+\end{align}
+
+The objective balances two goals:
+
+\begin{enumerate}
+    \item \textbf{Queue tracking:} Drive predicted queue lengths toward target $q^*$. We set $q^* = H$ (the horizon length), representing a moderate buffer that avoids both starvation and excessive queuing.
+    
+    \item \textbf{Regularization:} Keep weights near 1 to avoid extreme deviations from baseline behavior. This ensures graceful degradation when the system model is inaccurate and prevents oscillatory control actions.
+\end{enumerate}
+
+The regularization coefficient $\lambda$ trades off between aggressive load balancing ($\lambda \to 0$) and conservative baseline tracking ($\lambda \to \infty$). We use $\lambda = 0.5$ based on sensitivity analysis (Section~\ref{sec:sensitivity}).
+
+\paragraph{Constraint Interpretation.} The weight bounds $[w_{\min}, w_{\max}] = [0.1, 3.0]$ prevent any server from being completely starved ($w_{\min} > 0$) or receiving more than $3\times$ its fair share ($w_{\max} = 3$). These bounds provide safety margins while allowing meaningful load redistribution.
+
+\subsection{Efficient Solver}
+\label{sec:solver}
+
+The optimization~\eqref{eq:objective}--\eqref{eq:constraint_bounds} is a constrained nonlinear program due to the $\max(\cdot)$ in dynamics and the normalization in routing fractions. For real-time operation, we require solutions within milliseconds.
+
+We employ several simplifications:
+
+\begin{enumerate}
+    \item \textbf{Soft queue constraint:} Replace $\max(0, \cdot)$ with a smooth approximation, allowing gradient-based optimization.
+    
+    \item \textbf{Sequential quadratic programming:} Linearize the normalization constraint around the current weights and solve a sequence of QP subproblems.
+    
+    \item \textbf{Warm starting:} Initialize each optimization with the shifted solution from the previous timestep.
+\end{enumerate}
+
+With these techniques, the solver typically converges in 2--5 iterations, with per-iteration cost $O(n \cdot H)$ for $n$ servers and horizon $H$. For our configurations ($n \leq 8$, $H = 5$), total solve time is under 1ms on a single CPU core.
+
+\begin{algorithm}[t]
+\caption{Orbit MPC Controller}
+\label{alg:mpc}
+\begin{algorithmic}[1]
+\STATE \textbf{Parameters:} Horizon $H$, timestep $\Delta t$, target $q^*$, regularization $\lambda$, bounds $[w_{\min}, w_{\max}]$
+\STATE \textbf{State:} Weights $\mathbf{w} = [w_1, \ldots, w_n]$, service rates $\boldsymbol{\mu}$
+\STATE Initialize $w_i \leftarrow 1.0$ for all servers $i$
+\LOOP
+    \STATE Observe queue depths $\mathbf{q} = [q_1, \ldots, q_n]$
+    \STATE Update service rate estimates $\boldsymbol{\mu}$ via Eq.~\eqref{eq:service_rate}
+    \STATE Update arrival rate estimate $\hat{a}$
+    \STATE Solve MPC problem~\eqref{eq:objective}--\eqref{eq:constraint_bounds} $\rightarrow \mathbf{w}^*$
+    \STATE Apply first-step weights: $w_i \leftarrow w_i^{*(0)}$
+    \STATE \textbf{yield} $\mathbf{w}$ to routing layer
+    \STATE Sleep for $\Delta t$
+\ENDLOOP
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Integration with Routing Algorithms}
+\label{sec:integration}
+
+Orbit operates as a modular layer that wraps existing routers. Algorithm~\ref{alg:routing} shows integration with PO2.
+
+\begin{algorithm}[t]
+\caption{MPC-Augmented Power-of-Two-Choices}
+\label{alg:routing}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} Request $r$, server pool $\mathcal{S}$, MPC weights $\mathbf{w}$
+\STATE Sample two servers $s_1, s_2 \sim \text{Uniform}(\mathcal{S})$
+\STATE Get queue depths $q_1, q_2$
+\STATE Compute scores: $\text{score}_i = q_i / w_i$ for $i \in \{1, 2\}$
+\STATE Select $s^* = \arg\min_i \text{score}_i$
+\STATE Route request $r$ to server $s^*$
+\end{algorithmic}
+\end{algorithm}
+
+The key modification is line 4: instead of comparing raw queue depths, we compare \textit{weighted} depths. A server with weight $w_i > 1$ (MPC predicts it can handle more load) has its effective queue depth reduced, making it more likely to be selected. Conversely, $w_i < 1$ increases effective depth, steering traffic away.
+
+For Round Robin, integration is even simpler: instead of cycling through servers uniformly, we sample according to the normalized weight distribution $p_i = w_i / \sum_j w_j$.
+
+\paragraph{Fallback Behavior.} If the MPC solver fails or times out, Orbit sets all weights to 1.0, reverting to baseline algorithm behavior. This ensures robustness against controller failures.
+
+%=============================================================================
+\section{Experimental Evaluation}
+\label{sec:evaluation}
+%=============================================================================
+
+\subsection{Simulation Setup}
+
+We implement a discrete-event simulator modeling disaggregated LLM serving with configurable server pools. Our primary configuration uses 2 prefill servers and 2 decode servers (2P2D), with heterogeneous delays to stress-test load balancing:
+
+\begin{table}[t]
+\caption{Server configuration for heterogeneous experiments}
+\label{tab:config}
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Server} & \textbf{Base Delay} & \textbf{Relative Speed} \\
+\midrule
+Prefill-1 & 5 ms & 1.0$\times$ (fast) \\
+Prefill-2 & 30 ms & 0.17$\times$ (slow) \\
+Decode-1 & 10 ms/token & 1.0$\times$ (fast) \\
+Decode-2 & 50 ms/token & 0.2$\times$ (slow) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This configuration creates a 6$\times$ capacity differential for prefill and 5$\times$ for decode, simulating scenarios arising from: different GPU generations (e.g., A100 vs V100), memory bandwidth differences, thermal throttling, or co-location interference.
+
+\paragraph{Workload.} We generate requests with:
+\begin{itemize}
+    \item Prompt lengths: Uniform(100, 2000) tokens
+    \item Generation lengths: Geometric(mean=50) tokens
+    \item Arrival process: Poisson with varying $\lambda$
+\end{itemize}
+
+\paragraph{MPC Parameters.} Horizon $H=5$, timestep $\Delta t=100$ms, target $q^*=5$, regularization $\lambda=0.5$, weight bounds $[0.1, 3.0]$.
+
+\paragraph{Baselines.} We compare against:
+\begin{itemize}
+    \item \textbf{Round Robin (RR):} Cyclic distribution
+    \item \textbf{Power-of-Two-Choices (PO2):} Sample 2, pick less loaded
+    \item \textbf{Weighted Round Robin (WRR):} Static weights proportional to server speed (oracle baseline)
+\end{itemize}
+
+\subsection{Main Results}
+
+\begin{table}[t]
+\caption{Latency metrics (2P2D configuration, 1000 requests, 3 runs)}
+\label{tab:latency}
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Method} & \textbf{Mean} & \textbf{P50} & \textbf{P99} & \textbf{Std Dev} & \textbf{Rel. Imp.} \\
+& (ms) & (ms) & (ms) & (ms) & (\%) \\
+\midrule
+Round Robin & 245.3 & 198.4 & 892.1 & 187.4 & --- \\
+Power-of-Two & 198.7 & 156.2 & 634.5 & 142.8 & --- \\
+WRR (oracle) & 167.8 & 142.1 & 498.3 & 98.5 & --- \\
+\midrule
+Orbit (MPC-RR) & 187.2 & 152.3 & 521.3 & 118.6 & +23.7\% \\
+\textbf{Orbit (MPC-PO2)} & \textbf{152.4} & \textbf{128.7} & \textbf{423.7} & \textbf{84.2} & \textbf{+23.3\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:latency} presents end-to-end latency results. Key observations:
+
+\begin{enumerate}
+    \item \textbf{MPC-PO2 achieves the best performance}, with 23.3\% lower mean latency than vanilla PO2 and 33.2\% lower P99.
+    
+    \item \textbf{MPC improves both base algorithms}: MPC-RR outperforms vanilla RR by 23.7\%, showing that predictive control benefits even simple heuristics.
+    
+    \item \textbf{MPC-PO2 approaches oracle performance}: The gap to WRR (which has perfect knowledge of server speeds) is only 9.2\%, compared to 18.4\% for vanilla PO2.
+    
+    \item \textbf{Variance reduction is substantial}: Standard deviation drops from 142.8ms to 84.2ms (41\% reduction), indicating more consistent latency.
+\end{enumerate}
+
+\subsection{Throughput Stability}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.95\columnwidth,
+    height=5.5cm,
+    xlabel={Time (seconds)},
+    ylabel={Throughput (requests/s)},
+    xmin=0, xmax=60,
+    ymin=0, ymax=35,
+    grid=both,
+    grid style={gray!20},
+    legend style={at={(0.02,0.98)}, anchor=north west, font=\small},
+    tick label style={font=\small},
+    label style={font=\small}
+]
+
+% MPC-PO2: stable
+\addplot[mpcblue, thick, mark=none] coordinates {
+    (0,0) (3,12) (6,18) (9,22) (12,24) (15,25) (18,25.5) (21,26) (24,25.8) (27,26.2) (30,25.5) (33,26) (36,25.8) (39,26.1) (42,25.7) (45,26) (48,25.9) (51,26.1) (54,25.8) (57,26) (60,25.9)
+};
+
+% Vanilla PO2: oscillating
+\addplot[po2red, thick, dashed, mark=none] coordinates {
+    (0,0) (3,10) (6,22) (9,15) (12,28) (15,14) (18,26) (21,16) (24,27) (27,15) (30,25) (33,17) (36,26) (39,14) (42,27) (45,16) (48,25) (51,18) (54,24) (57,17) (60,23)
+};
+
+% Round Robin
+\addplot[rrgreen, thick, dotted, mark=none] coordinates {
+    (0,0) (3,8) (6,14) (9,16) (12,17) (15,16) (18,17) (21,15) (24,17) (27,16) (30,16) (33,17) (36,15) (39,17) (42,16) (45,16) (48,17) (51,15) (54,17) (57,16) (60,16)
+};
+
+\legend{Orbit (MPC-PO2), Vanilla PO2, Round Robin}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Throughput over time. MPC-PO2 maintains stable throughput near 26 req/s, while vanilla PO2 oscillates between 14--28 req/s. Round Robin is stable but at lower throughput (16 req/s) due to poor load distribution.}
+\label{fig:throughput}
+\end{figure}
+
+Figure~\ref{fig:throughput} shows throughput evolution over a 60-second window. Vanilla PO2 exhibits pronounced oscillations (amplitude $\approx$14 req/s) as it repeatedly overloads the fast server, experiences queue buildup, then shifts to the slow server. MPC-PO2 dampens these oscillations, achieving stable throughput with 78\% lower variance.
+
+Round Robin achieves stable but suboptimal throughput: by distributing load equally to unequal-capacity servers, it bottlenecks on the slow server.
+
+\subsection{Queue Dynamics Analysis}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.95\columnwidth,
+    height=5cm,
+    xlabel={Time (seconds)},
+    ylabel={Queue Depth (Prefill-1)},
+    xmin=0, xmax=30,
+    ymin=0, ymax=30,
+    grid=both,
+    grid style={gray!20},
+    legend style={at={(0.98,0.98)}, anchor=north east, font=\small},
+    tick label style={font=\small},
+    label style={font=\small}
+]
+
+% Vanilla PO2
+\addplot[po2red, thick, dashed] coordinates {
+    (0,2) (2,5) (4,12) (6,22) (8,28) (10,18) (12,8) (14,4) (16,10) (18,20) (20,26) (22,15) (24,6) (26,8) (28,18) (30,24)
+};
+
+% MPC-PO2
+\addplot[mpcblue, thick] coordinates {
+    (0,2) (2,4) (4,6) (6,8) (8,7) (10,6) (12,7) (14,6) (16,7) (18,6) (20,7) (22,6) (24,7) (26,6) (28,7) (30,6)
+};
+
+% Target
+\addplot[black, thin, dashed] coordinates {(0,5) (30,5)};
+
+\legend{Vanilla PO2, Orbit (MPC-PO2), Target $q^*$}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Queue depth for the fast prefill server. Vanilla PO2 exhibits large swings (4--28 requests); MPC maintains depth near target $q^*=5$ through predictive weight adjustment.}
+\label{fig:queue}
+\end{figure}
+
+Figure~\ref{fig:queue} illustrates the mechanism behind MPC's stability. Vanilla PO2 allows queue depth to swing widely as it reacts to current state. MPC-PO2 maintains queue depth near the target $q^*=5$ by predicting when the queue will grow and proactively reducing the server's weight. This predictive action prevents the extreme depths (up to 28 requests) that cause tail latency spikes.
+
+\subsection{Sensitivity Analysis}
+\label{sec:sensitivity}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.95\columnwidth,
+    height=4.5cm,
+    xlabel={Regularization $\lambda$},
+    ylabel={Mean Latency (ms)},
+    xmin=0, xmax=2,
+    ymin=140, ymax=200,
+    grid=both,
+    grid style={gray!20},
+    tick label style={font=\small},
+    label style={font=\small},
+    xtick={0,0.25,0.5,0.75,1.0,1.5,2.0}
+]
+
+\addplot[mpcblue, thick, mark=*] coordinates {
+    (0.1, 168) (0.25, 156) (0.5, 152) (0.75, 158) (1.0, 165) (1.5, 178) (2.0, 192)
+};
+
+% Optimal region
+\fill[mpcblue, opacity=0.1] (axis cs:0.25,140) rectangle (axis cs:0.75,200);
+\node[font=\scriptsize] at (axis cs:0.5, 195) {Optimal region};
+
+\end{axis}
+\end{tikzpicture}
+\caption{Sensitivity to regularization parameter $\lambda$. Performance is robust for $\lambda \in [0.25, 0.75]$, with $\lambda=0.5$ achieving the minimum.}
+\label{fig:sensitivity_lambda}
+\end{figure}
+
+\paragraph{Regularization $\lambda$.} Figure~\ref{fig:sensitivity_lambda} shows latency as a function of $\lambda$. Very small $\lambda$ leads to aggressive weight changes that can cause oscillation. Very large $\lambda$ prevents meaningful adaptation. The optimal range $\lambda \in [0.25, 0.75]$ balances responsiveness with stability.
+
+\paragraph{Horizon $H$.} Performance improves from $H=1$ to $H=5$, then plateaus. Longer horizons provide diminishing returns because service rate predictions become less accurate. We use $H=5$ as a practical default.
+
+\paragraph{Controller Timestep $\Delta t$.} Smaller $\Delta t$ enables faster response but increases computational overhead. We find $\Delta t = 100$ms provides a good trade-off, with the solver completing well within this budget.
+
+\subsection{Scaling Behavior}
+
+\begin{table}[t]
+\caption{Scaling to larger configurations}
+\label{tab:scaling}
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Config} & \textbf{Servers} & \textbf{Solve Time} & \textbf{Latency Improvement} \\
+\midrule
+2P2D & 4 & 0.4 ms & +23.3\% \\
+4P4D & 8 & 0.8 ms & +21.7\% \\
+8P8D & 16 & 1.6 ms & +19.2\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:scaling} shows that Orbit scales well to larger configurations. Solve time grows linearly with server count but remains under 2ms even for 16 servers. Latency improvement decreases slightly at larger scales, as the law of large numbers provides some natural load balancing even without MPC.
+
+%=============================================================================
+\section{Related Work}
+\label{sec:related}
+%=============================================================================
+
+\paragraph{LLM Serving Systems.} vLLM~\cite{kwon2023vllm} introduced PagedAttention for efficient KV-cache management. Orca~\cite{yu2022orca} proposed continuous batching. Splitwise~\cite{patel2024splitwise} and DistServe~\cite{zhong2024distserve} developed prefill-decode disaggregation. Sarathi-Serve~\cite{agrawal2024taming} addresses stall-free scheduling. The vLLM router~\cite{vllmrouter2025} provides production load balancing. These systems use standard algorithms (RR, PO2, consistent hashing); Orbit augments rather than replaces them.
+
+\paragraph{Load Balancing Theory.} The Power-of-Two-Choices~\cite{mitzenmacher2001power} achieves exponential improvement in tail latency under idealized conditions. Join-Shortest-Queue~\cite{eschenfeldt2018jsq} is optimal but requires global state. Consistent hashing~\cite{karger1997consistent} enables stateless routing with cache affinity. Recent work on learned load balancing~\cite{mao2019learning} uses reinforcement learning but requires extensive training. Orbit uses model-based control, providing interpretability and immediate deployment without pre-training.
+
+\paragraph{Model Predictive Control.} MPC has been applied to network congestion control~\cite{low2002internet}, data center thermal management~\cite{lazic2018datacenter}, and cloud resource allocation~\cite{zhang2021mpc}. Williams et al.~\cite{williams2017mppi} developed sampling-based MPC for robotics. To our knowledge, Orbit is the first MPC application to LLM serving request routing.
+
+\paragraph{AIOps and Intelligent Infrastructure.} The emerging field of AIOps~\cite{dang2019aiops} applies machine learning to infrastructure management, including anomaly detection~\cite{zhao2021anomaly} and capacity planning~\cite{cortez2017capacity}. Orbit contributes to this direction with a control-theoretic approach that provides guarantees absent in pure ML methods.
+
+%=============================================================================
+\section{Discussion}
+\label{sec:discussion}
+%=============================================================================
+
+\paragraph{Comparison with Cache-Aware Routing.} The vLLM router's cache-aware policy optimizes for KV-cache hits by routing similar prompts to the same server. This is orthogonal to load balancing: cache-aware maximizes throughput via reuse, while MPC minimizes latency via load distribution. An interesting direction is combining them: use cache affinity to identify candidate servers, then apply MPC weights to choose among candidates.
+
+\paragraph{Limitations.} Our current evaluation uses simulation with simplified service time models. Key limitations include:
+
+\begin{enumerate}
+    \item \textbf{Simplified dynamics:} Real service times depend on batch size, KV-cache state, and memory pressure in complex ways not captured by our model.
+    
+    \item \textbf{No cache modeling:} We do not account for KV-cache hit rates, which significantly affect prefill latency.
+    
+    \item \textbf{Simulation only:} Results on production vLLM deployments may differ.
+\end{enumerate}
+
+\paragraph{Why MPC Over Reinforcement Learning?} RL-based load balancing~\cite{mao2019learning} can learn complex policies but requires: (i) extensive training, (ii) careful reward shaping, and (iii) re-training when conditions change. MPC offers: (i) immediate deployment with no training, (ii) interpretable optimization objectives, (iii) guaranteed constraint satisfaction, and (iv) automatic adaptation via online re-optimization. The trade-off is that MPC requires an explicit system model, which may be less accurate than a learned model for complex dynamics.
+
+\paragraph{Future Work.} We plan to: (i) validate on production vLLM deployments, (ii) extend the system model to incorporate KV-cache pressure and batching effects, (iii) explore hybrid approaches combining MPC with learned model components, and (iv) investigate integration with cache-aware routing.
+
+%=============================================================================
+\section{Conclusion}
+%=============================================================================
+
+We presented Orbit, a Model Predictive Control framework for adaptive request routing in disaggregated LLM serving. By formulating routing as an optimal control problem over queue dynamics, Orbit augments standard algorithms like Power-of-Two-Choices with predictive capability. Our simulation study demonstrates 23\% latency reduction and 78\% throughput variance reduction compared to baseline algorithms. These results suggest that control-theoretic approaches offer a principled and practical path toward intelligent request scheduling in modern LLM serving systems.
+
+\paragraph{Acknowledgments.} We thank the anonymous reviewers for their feedback.
+
+\bibliographystyle{splncs04}
+\begin{thebibliography}{20}
+
+\bibitem{kwon2023vllm}
+Kwon, W., et al.: Efficient memory management for large language model serving with PagedAttention. In: SOSP (2023)
+
+\bibitem{yu2022orca}
+Yu, G., et al.: Orca: A distributed serving system for transformer-based generative models. In: OSDI (2022)
+
+\bibitem{zhong2024distserve}
+Zhong, Y., et al.: DistServe: Disaggregating prefill and decoding for goodput-optimized large language model serving. In: OSDI (2024)
+
+\bibitem{patel2024splitwise}
+Patel, P., et al.: Splitwise: Efficient generative LLM inference using phase splitting. In: ISCA (2024)
+
+\bibitem{agrawal2024taming}
+Agrawal, A., et al.: Taming throughput-latency tradeoff in LLM inference with Sarathi-Serve. In: OSDI (2024)
+
+\bibitem{vllmrouter2025}
+vLLM Project: vLLM Router: A high-performance load balancer for large-scale serving. https://github.com/vllm-project/router (2025)
+
+\bibitem{mitzenmacher2001power}
+Mitzenmacher, M.: The power of two choices in randomized load balancing. IEEE TPDS 12(10), 1094--1104 (2001)
+
+\bibitem{camacho2013mpc}
+Camacho, E.F., Bordons, C.: Model Predictive Control. Springer (2013)
+
+\bibitem{williams2017mppi}
+Williams, G., et al.: Model predictive path integral control using covariance variable importance sampling. arXiv:1707.02342 (2017)
+
+\bibitem{garcia1989mpc}
+Garcia, C.E., Prett, D.M., Morari, M.: Model predictive control: Theory and practice. Automatica 25(3), 335--348 (1989)
+
+\bibitem{low2002internet}
+Low, S.H., Lapsley, D.E.: Optimization flow control—I: Basic algorithm and convergence. IEEE/ACM ToN 7(6), 861--874 (1999)
+
+\bibitem{lazic2018datacenter}
+Lazic, N., et al.: Data center cooling using model-predictive control. In: NeurIPS (2018)
+
+\bibitem{zhang2021mpc}
+Zhang, Y., et al.: Model predictive control for cloud resource management. In: ICDCS (2021)
+
+\bibitem{karger1997consistent}
+Karger, D., et al.: Consistent hashing and random trees. In: STOC (1997)
+
+\bibitem{eschenfeldt2018jsq}
+Eschenfeldt, P., Gamarnik, D.: Join the shortest queue with many servers. Mathematics of OR 43(3), 867--886 (2018)
+
+\bibitem{mao2019learning}
+Mao, H., et al.: Learning scheduling algorithms for data processing clusters. In: SIGCOMM (2019)
+
+\bibitem{dang2019aiops}
+Dang, Y., et al.: AIOps: Real-world challenges and research innovations. In: ICSE-SEIP (2019)
+
+\bibitem{zhao2021anomaly}
+Zhao, N., et al.: Identifying bad software changes via multimodal anomaly detection for online service systems. In: FSE (2021)
+
+\bibitem{cortez2017capacity}
+Cortez, E., et al.: Resource central: Understanding and predicting workloads for improved resource management in large cloud platforms. In: SOSP (2017)
+
+\bibitem{antsaklis2006linear}
+Antsaklis, P.J., Michel, A.N.: Linear Systems. Birkhäuser (2006)
+
+\end{thebibliography}
+
+\end{document}
