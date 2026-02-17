@@ -46,9 +46,10 @@ async def decode(req: Request):
     
     active_requests += 1
     start_time = time.monotonic()
+    active_count_local = active_requests  # Capture for use in generator
     
     async def generate_tokens():
-        nonlocal active_requests
+        global active_requests
         
         try:
             for i in range(gen_length):

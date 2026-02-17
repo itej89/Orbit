@@ -1,0 +1,18 @@
+{
+  "url": "http://127.0.0.1:8000/v1/chat/completions",
+  "metrics_url": "http://127.0.0.1:8000/metrics",
+  "concurrency": 24,
+  "total_requests": 300,
+  "target_rps": 15.0,
+  "duration_seconds": 0,
+  "pattern": "steady",
+  "burst_multiplier": 3.0,
+  "burst_duration": 2.0,
+  "burst_interval": 10.0,
+  "min_prompt_tokens": 50,
+  "max_prompt_tokens": 500,
+  "min_output_tokens": 16,
+  "max_output_tokens": 128,
+  "output_dir": "/home/ravgupta/orbit_paper/simulation/results",
+  "experiment_name": "het_6x_rr_mpc_steady"
+}

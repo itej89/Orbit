@@ -1,0 +1,22 @@
+
+\begin{table}[t]
+\caption{MPC improvement across heterogeneity levels (PO2 baseline). MPC shows strongest benefits with moderate heterogeneity (2x-4x capacity difference).}
+\label{tab:mpc_results}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l ccc ccc c}
+\toprule
+& \multicolumn{3}{c}{\textbf{Baseline PO2}} & \multicolumn{3}{c}{\textbf{MPC-Augmented}} & \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+\textbf{Config} & Mean & P99 & Std & Mean & P99 & Std & \textbf{Impr.} \\
+& (ms) & (ms) & (ms) & (ms) & (ms) & (ms) & (\%) \\
+\midrule
+Homo. & 779 & 2903 & 693 & 848 & 2887 & 676 & -8.8 \\
+2X & 527 & 2690 & 525 & 444 & 2810 & 471 & \textbf{+15.7} \\
+4X & 659 & 5283 & 936 & 552 & 3526 & 624 & \textbf{+16.2} \\
+6X & 774 & 7001 & 1374 & 716 & 7139 & 1084 & \textbf{+7.5} \\
+
+\bottomrule
+\end{tabular}
+\end{table}

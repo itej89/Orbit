@@ -158,12 +158,13 @@ async def worker(
     worker_id: int,
     start_time: float,
     request_counter: List[int],
+    counter_lock: asyncio.Lock,
 ) -> None:
     """Worker that sends requests according to arrival pattern."""
     
     while not stop_event.is_set():
         # Check if we've hit request limit
-        with asyncio.Lock():
+        async with counter_lock:
             if config.total_requests > 0 and request_counter[0] >= config.total_requests:
                 break
             request_num = request_counter[0]
@@ -322,9 +323,10 @@ async def run_benchmark(config: BenchmarkConfig) -> Dict:
         # Start workers
         start_time = time.monotonic()
         request_counter = [0]
+        counter_lock = asyncio.Lock()
         
         workers = [
-            asyncio.create_task(worker(client, config, i, start_time, request_counter))
+            asyncio.create_task(worker(client, config, i, start_time, request_counter, counter_lock))
             for i in range(config.concurrency)
         ]
         

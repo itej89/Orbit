@@ -54,11 +54,12 @@ class ExperimentConfig:
 
 
 # Server preset definitions (delay in ms)
+# Designed to create meaningful heterogeneity for MPC testing
 SERVER_PRESETS = {
-    "fast": {"prefill_base": 5, "decode_token": 8, "capacity": 16},
-    "medium": {"prefill_base": 15, "decode_token": 15, "capacity": 8},
-    "slow": {"prefill_base": 30, "decode_token": 30, "capacity": 4},
-    "very_slow": {"prefill_base": 50, "decode_token": 50, "capacity": 2},
+    "fast": {"prefill_base": 5, "decode_token": 8, "capacity": 16, "variance": 0.2},
+    "medium": {"prefill_base": 15, "decode_token": 20, "capacity": 8, "variance": 0.3},
+    "slow": {"prefill_base": 35, "decode_token": 40, "capacity": 4, "variance": 0.4},
+    "very_slow": {"prefill_base": 60, "decode_token": 80, "capacity": 2, "variance": 0.5},
 }
 
 # =============================================================================
@@ -154,28 +155,51 @@ class ProcessManager:
     def start_server(self, name: str, cmd: List[str], cwd: str = None) -> bool:
         """Start a server process."""
         try:
+            # Use shell=False with full path, redirect to DEVNULL
             proc = subprocess.Popen(
                 cmd,
                 cwd=cwd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,  # Detach from terminal
             )
             self.processes[name] = proc
-            time.sleep(0.5)  # Give server time to start
-            return proc.poll() is None
+            time.sleep(1.5)  # Give server more time to start
+            
+            # Check if still running
+            if proc.poll() is not None:
+                return False
+            return True
         except Exception as e:
             print(f"Failed to start {name}: {e}")
             return False
     
     def stop_all(self):
         """Stop all processes."""
-        for name, proc in self.processes.items():
+        for name, proc in list(self.processes.items()):
             try:
                 proc.terminate()
-                proc.wait(timeout=5)
             except:
-                proc.kill()
+                pass
+        
+        time.sleep(0.5)
+        
+        for name, proc in list(self.processes.items()):
+            try:
+                proc.wait(timeout=2)
+            except:
+                try:
+                    proc.kill()
+                    proc.wait(timeout=1)
+                except:
+                    pass
         self.processes.clear()
+        
+        # Also kill any orphaned processes
+        subprocess.run(["pkill", "-f", "prefill_server"], capture_output=True)
+        subprocess.run(["pkill", "-f", "decode_server"], capture_output=True)
+        subprocess.run(["pkill", "-f", "router_v2"], capture_output=True)
+        time.sleep(0.5)
     
     def is_running(self, name: str) -> bool:
         """Check if a process is still running."""
@@ -187,6 +211,39 @@ class ProcessManager:
 def get_script_dir() -> Path:
     """Get the directory containing this script."""
     return Path(__file__).parent.absolute()
+
+
+def wait_for_server(host: str, port: int, timeout: float = 10) -> bool:
+    """Wait for a server to become responsive."""
+    import urllib.request
+    
+    start = time.monotonic()
+    while time.monotonic() - start < timeout:
+        try:
+            # Try HTTP health check
+            with urllib.request.urlopen(f"http://{host}:{port}/v1/health", timeout=2) as resp:
+                if resp.status == 200:
+                    return True
+        except:
+            pass
+        time.sleep(0.3)
+    return False
+
+
+def wait_for_router(host: str, port: int, timeout: float = 10) -> bool:
+    """Wait for the router to become responsive."""
+    import urllib.request
+    
+    start = time.monotonic()
+    while time.monotonic() - start < timeout:
+        try:
+            with urllib.request.urlopen(f"http://{host}:{port}/health", timeout=2) as resp:
+                if resp.status == 200:
+                    return True
+        except:
+            pass
+        time.sleep(0.3)
+    return False
 
 
 # =============================================================================
@@ -218,11 +275,18 @@ def run_experiment(
             "--port", str(server.port),
             "--base-delay", str(preset["prefill_base"] / 1000),
             "--capacity", str(preset["capacity"]),
-            "--variance", "0.3",
+            "--variance", str(preset.get("variance", 0.3)),
         ]
         if not pm.start_server(f"prefill_{server.name}", cmd, str(script_dir)):
             print(f"  ERROR: Failed to start prefill server {server.name}")
-            return {"error": f"Failed to start {server.name}"}
+            pm.stop_all()
+            return {"error": f"Failed to start prefill {server.name}"}
+        
+        # Wait for server to respond
+        if not wait_for_server("127.0.0.1", server.port, timeout=8):
+            print(f"  ERROR: Prefill server {server.name} not responding")
+            pm.stop_all()
+            return {"error": f"Prefill {server.name} not responding"}
         print(f"  Started prefill server {server.name} on port {server.port}")
     
     # Start decode servers
@@ -234,14 +298,19 @@ def run_experiment(
             "--port", str(server.port),
             "--base-token-delay", str(preset["decode_token"] / 1000),
             "--capacity", str(preset["capacity"]),
-            "--variance", "0.3",
+            "--variance", str(preset.get("variance", 0.3)),
         ]
         if not pm.start_server(f"decode_{server.name}", cmd, str(script_dir)):
             print(f"  ERROR: Failed to start decode server {server.name}")
-            return {"error": f"Failed to start {server.name}"}
+            pm.stop_all()
+            return {"error": f"Failed to start decode {server.name}"}
+        
+        # Wait for server to respond
+        if not wait_for_server("127.0.0.1", server.port, timeout=8):
+            print(f"  ERROR: Decode server {server.name} not responding")
+            pm.stop_all()
+            return {"error": f"Decode {server.name} not responding"}
         print(f"  Started decode server {server.name} on port {server.port}")
-    
-    time.sleep(1)  # Wait for servers to initialize
     
     # Start router
     prefill_hosts = " ".join(["127.0.0.1"] * len(exp.prefill_servers))
@@ -264,10 +333,15 @@ def run_experiment(
     
     if not pm.start_server("router", router_cmd, str(script_dir)):
         print("  ERROR: Failed to start router")
+        pm.stop_all()
         return {"error": "Failed to start router"}
-    print(f"  Started router on port 8000")
     
-    time.sleep(2)  # Wait for router to initialize
+    # Wait for router health
+    if not wait_for_router("127.0.0.1", 8000, timeout=10):
+        print("  ERROR: Router not responding")
+        pm.stop_all()
+        return {"error": "Router not responding"}
+    print(f"  Started router on port 8000")
     
     # Run benchmark
     exp_results_dir = results_dir / exp.name
