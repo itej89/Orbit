@@ -1,0 +1,142 @@
+\relax 
+\citation{kwon2023vllm,yu2022orca}
+\citation{zhong2024distserve,patel2024splitwise}
+\@writefile{toc}{\contentsline {title}{Orbit: Model Predictive Control for Adaptive Request Routing in Disaggregated LLM Serving}{1}{}\protected@file@percent }
+\@writefile{toc}{\authcount {2}}
+\@writefile{toc}{\contentsline {author}{Tejeshwar Iyengar \and Ravi Gupta}{1}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{}\protected@file@percent }
+\citation{yu2022orca}
+\citation{camacho2013mpc}
+\citation{williams2017mppi}
+\citation{garcia1989mpc}
+\citation{low2002internet}
+\@writefile{toc}{\contentsline {paragraph}{Contributions.}{2}{}\protected@file@percent }
+\citation{kwon2023vllm}
+\citation{yu2022orca}
+\citation{patel2024splitwise}
+\citation{zhong2024distserve}
+\citation{vllmrouter2025}
+\citation{vllmrouter2025}
+\citation{mitzenmacher2001power}
+\citation{mitzenmacher2001power}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Background and Motivation}{3}{}\protected@file@percent }
+\newlabel{sec:background}{{2}{3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}LLM Inference Architecture}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Existing Routing Policies}{3}{}\protected@file@percent }
+\citation{camacho2013mpc}
+\citation{low2002internet}
+\citation{lazic2018datacenter}
+\citation{zhang2021mpc}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Queue depth oscillations under vanilla PO2 with heterogeneous servers. Traffic repeatedly shifts as each server becomes overloaded, causing sustained high latency for both.\relax }}{4}{}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:oscillation}{{1}{4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Limitations of Reactive Routing}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Why Model Predictive Control?}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Orbit Framework}{5}{}\protected@file@percent }
+\newlabel{sec:method}{{3}{5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}System Model}{5}{}\protected@file@percent }
+\newlabel{sec:formulation}{{3.1}{5}}
+\newlabel{eq:dynamics}{{1}{5}}
+\newlabel{eq:routing}{{2}{5}}
+\@writefile{toc}{\contentsline {paragraph}{Service Rate Estimation.}{5}{}\protected@file@percent }
+\newlabel{eq:service_rate}{{3}{5}}
+\@writefile{toc}{\contentsline {paragraph}{Arrival Rate Estimation.}{5}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}MPC Formulation}{5}{}\protected@file@percent }
+\newlabel{eq:objective}{{4}{6}}
+\newlabel{eq:constraint_dynamics}{{5}{6}}
+\newlabel{eq:constraint_routing}{{6}{6}}
+\newlabel{eq:constraint_bounds}{{7}{6}}
+\@writefile{toc}{\contentsline {paragraph}{Constraint Interpretation.}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Efficient Solver}{6}{}\protected@file@percent }
+\newlabel{sec:solver}{{3.3}{6}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Orbit MPC Controller\relax }}{7}{}\protected@file@percent }
+\newlabel{alg:mpc}{{1}{7}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces MPC-Augmented Power-of-Two-Choices\relax }}{7}{}\protected@file@percent }
+\newlabel{alg:routing}{{2}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Integration with Routing Algorithms}{7}{}\protected@file@percent }
+\newlabel{sec:integration}{{3.4}{7}}
+\@writefile{toc}{\contentsline {paragraph}{Fallback Behavior.}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Experimental Evaluation}{7}{}\protected@file@percent }
+\newlabel{sec:evaluation}{{4}{7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Simulation Setup}{7}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Server presets used in heterogeneity experiments. We vary the ratio between fast and slow servers to study MPC effectiveness.\relax }}{8}{}\protected@file@percent }
+\newlabel{tab:config}{{1}{8}}
+\@writefile{toc}{\contentsline {paragraph}{Workload.}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{MPC Parameters.}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Baselines.}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Main Results}{8}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces MPC improvement across heterogeneity levels (2P2D configuration, 300 requests per experiment). MPC shows strongest benefits with moderate heterogeneity (2--4$\times $ capacity difference).\relax }}{9}{}\protected@file@percent }
+\newlabel{tab:latency}{{2}{9}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Bursty workload results (4$\times $ heterogeneity, periodic 3$\times $ load spikes). MPC shows largest improvement in tail latency under variable load.\relax }}{9}{}\protected@file@percent }
+\newlabel{tab:bursty}{{3}{9}}
+\@writefile{toc}{\contentsline {paragraph}{Bursty Workload Performance.}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Throughput Stability}{9}{}\protected@file@percent }
+\citation{kwon2023vllm}
+\citation{yu2022orca}
+\citation{patel2024splitwise}
+\citation{zhong2024distserve}
+\citation{agrawal2024taming}
+\citation{vllmrouter2025}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Throughput over time. MPC-PO2 maintains stable throughput near 26 req/s, while vanilla PO2 oscillates between 14--28 req/s. Round Robin is stable but at lower throughput (16 req/s) due to poor load distribution.\relax }}{10}{}\protected@file@percent }
+\newlabel{fig:throughput}{{2}{10}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Queue Dynamics Analysis}{10}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Sensitivity Analysis}{10}{}\protected@file@percent }
+\newlabel{sec:sensitivity}{{4.5}{10}}
+\@writefile{toc}{\contentsline {paragraph}{Regularization $\lambda $.}{10}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Horizon $H$.}{10}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Controller Timestep $\Delta t$.}{10}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Scaling Behavior}{10}{}\protected@file@percent }
+\citation{mitzenmacher2001power}
+\citation{eschenfeldt2018jsq}
+\citation{karger1997consistent}
+\citation{mao2019learning}
+\citation{low2002internet}
+\citation{lazic2018datacenter}
+\citation{zhang2021mpc}
+\citation{williams2017mppi}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Queue depth for the fast prefill server. Vanilla PO2 exhibits large swings (4--28 requests); MPC maintains depth near target $q^*=5$ through predictive weight adjustment.\relax }}{11}{}\protected@file@percent }
+\newlabel{fig:queue}{{3}{11}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Sensitivity to regularization parameter $\lambda $. Performance is robust for $\lambda \in [0.25, 0.75]$, with $\lambda =0.5$ achieving the minimum.\relax }}{11}{}\protected@file@percent }
+\newlabel{fig:sensitivity_lambda}{{4}{11}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Related Work}{11}{}\protected@file@percent }
+\newlabel{sec:related}{{5}{11}}
+\@writefile{toc}{\contentsline {paragraph}{LLM Serving Systems.}{11}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Load Balancing Theory.}{11}{}\protected@file@percent }
+\citation{dang2019aiops}
+\citation{zhao2021anomaly}
+\citation{cortez2017capacity}
+\citation{mao2019learning}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Scaling to larger configurations\relax }}{12}{}\protected@file@percent }
+\newlabel{tab:scaling}{{4}{12}}
+\@writefile{toc}{\contentsline {paragraph}{Model Predictive Control.}{12}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{AIOps and Intelligent Infrastructure.}{12}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Discussion}{12}{}\protected@file@percent }
+\newlabel{sec:discussion}{{6}{12}}
+\@writefile{toc}{\contentsline {paragraph}{Comparison with Cache-Aware Routing.}{12}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Limitations.}{12}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Why MPC Over Reinforcement Learning?}{12}{}\protected@file@percent }
+\bibstyle{splncs04}
+\bibcite{kwon2023vllm}{1}
+\bibcite{yu2022orca}{2}
+\bibcite{zhong2024distserve}{3}
+\bibcite{patel2024splitwise}{4}
+\bibcite{agrawal2024taming}{5}
+\bibcite{vllmrouter2025}{6}
+\bibcite{mitzenmacher2001power}{7}
+\bibcite{camacho2013mpc}{8}
+\bibcite{williams2017mppi}{9}
+\bibcite{garcia1989mpc}{10}
+\bibcite{low2002internet}{11}
+\bibcite{lazic2018datacenter}{12}
+\bibcite{zhang2021mpc}{13}
+\bibcite{karger1997consistent}{14}
+\@writefile{toc}{\contentsline {paragraph}{Future Work.}{13}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion}{13}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Acknowledgments.}{13}{}\protected@file@percent }
+\bibcite{eschenfeldt2018jsq}{15}
+\bibcite{mao2019learning}{16}
+\bibcite{dang2019aiops}{17}
+\bibcite{zhao2021anomaly}{18}
+\bibcite{cortez2017capacity}{19}
+\bibcite{antsaklis2006linear}{20}
+\gdef \@abspage@last{14}

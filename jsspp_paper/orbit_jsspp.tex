@@ -31,7 +31,7 @@
 \maketitle
 
 \begin{abstract}
-Large Language Model (LLM) inference at scale increasingly adopts prefill-decode disaggregation, where compute-intensive prompt processing and memory-bound token generation are handled by separate server pools. This architecture introduces complex request routing challenges: heterogeneous service times, variable workload characteristics, and temporal dependencies from batching create conditions where traditional load balancing algorithms perform poorly. We present \textbf{Orbit}, a Model Predictive Control (MPC) framework that augments standard routing policies with horizon-based prediction and adaptive weight adjustment. Rather than replacing existing algorithms, Orbit wraps them with a predictive control layer that anticipates future congestion and proactively redistributes traffic. We formulate request routing as an optimal control problem over queue dynamics, derive an efficient solver suitable for real-time operation, and demonstrate integration with Power-of-Two-Choices and Round Robin policies. Our simulation study on disaggregated configurations shows that MPC-augmented routing achieves 23\% lower mean latency, 33\% lower tail latency, and 78\% reduced throughput variance compared to baseline algorithms. These results suggest that predictive control offers a principled approach to request scheduling in modern LLM serving systems.
+Large Language Model (LLM) inference at scale increasingly adopts prefill-decode disaggregation, where compute-intensive prompt processing and memory-bound token generation are handled by separate server pools. This architecture introduces complex request routing challenges: heterogeneous service times, variable workload characteristics, and temporal dependencies from batching create conditions where traditional load balancing algorithms perform poorly. We present \textbf{Orbit}, a Model Predictive Control (MPC) framework that augments standard routing policies with horizon-based prediction and adaptive weight adjustment. Rather than replacing existing algorithms, Orbit wraps them with a predictive control layer that anticipates future congestion and proactively redistributes traffic. We formulate request routing as an optimal control problem over queue dynamics, derive an efficient solver suitable for real-time operation, and demonstrate integration with Power-of-Two-Choices and Round Robin policies. Our simulation study on disaggregated configurations with heterogeneous servers shows that MPC-augmented routing achieves \textbf{16\% lower mean latency} under steady load and \textbf{37\% lower tail latency} under bursty conditions, with the strongest benefits appearing when server capacities differ by 2--4$\times$. These results suggest that predictive control offers a principled approach to request scheduling in modern LLM serving systems, particularly in heterogeneous deployments.
 
 \keywords{Request Scheduling \and Load Balancing \and Model Predictive Control \and LLM Serving \and Disaggregated Inference}
 \end{abstract}
@@ -67,9 +67,9 @@ We present \textbf{Orbit}, a framework that augments standard routing algorithms
     
     \item We design an efficient solver that computes weight trajectories in real-time, suitable for integration with production routers (Section~\ref{sec:solver}).
     
-    \item We demonstrate integration with Power-of-Two-Choices and Round Robin, showing that MPC augmentation improves both algorithms (Section~\ref{sec:integration}).
+    \item We demonstrate integration with Power-of-Two-Choices, showing that MPC augmentation improves load balancing under heterogeneous server configurations (Section~\ref{sec:integration}).
     
-    \item We present simulation results showing 23\% latency reduction and 78\% throughput variance reduction compared to baseline algorithms (Section~\ref{sec:evaluation}).
+    \item We present comprehensive simulation results characterizing when MPC helps: 15--16\% mean latency reduction with 2--4$\times$ server heterogeneity, 37\% tail latency reduction under bursty workloads, and no benefit for homogeneous deployments (Section~\ref{sec:evaluation}).
 \end{enumerate}
 
 %=============================================================================
@@ -295,22 +295,22 @@ For Round Robin, integration is even simpler: instead of cycling through servers
 We implement a discrete-event simulator modeling disaggregated LLM serving with configurable server pools. Our primary configuration uses 2 prefill servers and 2 decode servers (2P2D), with heterogeneous delays to stress-test load balancing:
 
 \begin{table}[t]
-\caption{Server configuration for heterogeneous experiments}
+\caption{Server presets used in heterogeneity experiments. We vary the ratio between fast and slow servers to study MPC effectiveness.}
 \label{tab:config}
 \centering
-\begin{tabular}{lcc}
+\begin{tabular}{lcccc}
 \toprule
-\textbf{Server} & \textbf{Base Delay} & \textbf{Relative Speed} \\
+\textbf{Preset} & \textbf{Prefill Delay} & \textbf{Decode Delay} & \textbf{Capacity} & \textbf{Variance} \\
 \midrule
-Prefill-1 & 5 ms & 1.0$\times$ (fast) \\
-Prefill-2 & 30 ms & 0.17$\times$ (slow) \\
-Decode-1 & 10 ms/token & 1.0$\times$ (fast) \\
-Decode-2 & 50 ms/token & 0.2$\times$ (slow) \\
+Fast & 5 ms & 8 ms/token & 16 & $\pm$20\% \\
+Medium & 15 ms & 20 ms/token & 8 & $\pm$30\% \\
+Slow & 35 ms & 40 ms/token & 4 & $\pm$40\% \\
+Very Slow & 60 ms & 80 ms/token & 2 & $\pm$50\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-This configuration creates a 6$\times$ capacity differential for prefill and 5$\times$ for decode, simulating scenarios arising from: different GPU generations (e.g., A100 vs V100), memory bandwidth differences, thermal throttling, or co-location interference.
+We test four heterogeneity levels: \textbf{Homogeneous} (both servers Medium), \textbf{2$\times$} (Fast + Medium), \textbf{4$\times$} (Fast + Slow), and \textbf{6$\times$} (Fast + Very Slow). These configurations simulate scenarios arising from: different GPU generations (e.g., H100 vs A100 vs V100), memory bandwidth differences, thermal throttling, or co-location interference.
 
 \paragraph{Workload.} We generate requests with:
 \begin{itemize}
@@ -331,35 +331,52 @@ This configuration creates a 6$\times$ capacity differential for prefill and 5$\
 \subsection{Main Results}
 
 \begin{table}[t]
-\caption{Latency metrics (2P2D configuration, 1000 requests, 3 runs)}
+\caption{MPC improvement across heterogeneity levels (2P2D configuration, 300 requests per experiment). MPC shows strongest benefits with moderate heterogeneity (2--4$\times$ capacity difference).}
 \label{tab:latency}
 \centering
-\begin{tabular}{lccccc}
+\begin{tabular}{l ccc ccc c}
 \toprule
-\textbf{Method} & \textbf{Mean} & \textbf{P50} & \textbf{P99} & \textbf{Std Dev} & \textbf{Rel. Imp.} \\
-& (ms) & (ms) & (ms) & (ms) & (\%) \\
+& \multicolumn{3}{c}{\textbf{Baseline PO2}} & \multicolumn{3}{c}{\textbf{MPC-Augmented PO2}} & \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+\textbf{Config} & Mean & P99 & Std & Mean & P99 & Std & \textbf{Impr.} \\
+& (ms) & (ms) & (ms) & (ms) & (ms) & (ms) & (\%) \\
 \midrule
-Round Robin & 245.3 & 198.4 & 892.1 & 187.4 & --- \\
-Power-of-Two & 198.7 & 156.2 & 634.5 & 142.8 & --- \\
-WRR (oracle) & 167.8 & 142.1 & 498.3 & 98.5 & --- \\
-\midrule
-Orbit (MPC-RR) & 187.2 & 152.3 & 521.3 & 118.6 & +23.7\% \\
-\textbf{Orbit (MPC-PO2)} & \textbf{152.4} & \textbf{128.7} & \textbf{423.7} & \textbf{84.2} & \textbf{+23.3\%} \\
+Homogeneous & 779 & 2903 & 693 & 848 & 2887 & 676 & $-$8.8 \\
+2$\times$ Het. & 527 & 2690 & 525 & 444 & 2810 & 471 & \textbf{+15.7} \\
+4$\times$ Het. & 659 & 5283 & 936 & 552 & 3526 & 624 & \textbf{+16.2} \\
+6$\times$ Het. & 774 & 7001 & 1374 & 716 & 7139 & 1084 & \textbf{+7.5} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:latency} presents end-to-end latency results. Key observations:
+Table~\ref{tab:latency} presents end-to-end latency results across different heterogeneity levels. Key observations:
 
 \begin{enumerate}
-    \item \textbf{MPC-PO2 achieves the best performance}, with 23.3\% lower mean latency than vanilla PO2 and 33.2\% lower P99.
+    \item \textbf{MPC benefits scale with heterogeneity}: With 2$\times$ capacity difference, MPC achieves 15.7\% lower mean latency (444ms vs 527ms). At 4$\times$ heterogeneity, improvement reaches 16.2\%.
     
-    \item \textbf{MPC improves both base algorithms}: MPC-RR outperforms vanilla RR by 23.7\%, showing that predictive control benefits even simple heuristics.
+    \item \textbf{Homogeneous deployments don't benefit}: When servers have equal capacity, MPC adds overhead without benefit ($-$8.8\%). This is expected---adaptive weighting provides no value when all servers are identical.
     
-    \item \textbf{MPC-PO2 approaches oracle performance}: The gap to WRR (which has perfect knowledge of server speeds) is only 9.2\%, compared to 18.4\% for vanilla PO2.
+    \item \textbf{Extreme heterogeneity shows diminishing returns}: At 6$\times$ capacity difference, improvement drops to 7.5\%. The slow server becomes a bottleneck regardless of routing decisions.
     
-    \item \textbf{Variance reduction is substantial}: Standard deviation drops from 142.8ms to 84.2ms (41\% reduction), indicating more consistent latency.
+    \item \textbf{Variance reduction is substantial}: At 4$\times$ heterogeneity, standard deviation drops from 936ms to 624ms (33\% reduction), indicating more consistent latency.
 \end{enumerate}
+
+\begin{table}[t]
+\caption{Bursty workload results (4$\times$ heterogeneity, periodic 3$\times$ load spikes). MPC shows largest improvement in tail latency under variable load.}
+\label{tab:bursty}
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Method} & \textbf{Mean} & \textbf{P99} & \textbf{Std} & \textbf{Mean Imp.} & \textbf{P99 Imp.} \\
+& (ms) & (ms) & (ms) & (\%) & (\%) \\
+\midrule
+Baseline PO2 & 639 & 5438 & 972 & --- & --- \\
+\textbf{MPC-PO2} & \textbf{632} & \textbf{3407} & \textbf{665} & +1.1 & \textbf{+37.3} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Bursty Workload Performance.} Table~\ref{tab:bursty} shows results under bursty conditions with periodic 3$\times$ load spikes. While mean latency improvement is modest (+1.1\%), MPC dramatically reduces tail latency: P99 drops from 5438ms to 3407ms, a \textbf{37\% improvement}. This demonstrates MPC's value for latency-sensitive applications where tail behavior matters most.
 
 \subsection{Throughput Stability}
 
@@ -546,7 +563,7 @@ Table~\ref{tab:scaling} shows that Orbit scales well to larger configurations. S
 \section{Conclusion}
 %=============================================================================
 
-We presented Orbit, a Model Predictive Control framework for adaptive request routing in disaggregated LLM serving. By formulating routing as an optimal control problem over queue dynamics, Orbit augments standard algorithms like Power-of-Two-Choices with predictive capability. Our simulation study demonstrates 23\% latency reduction and 78\% throughput variance reduction compared to baseline algorithms. These results suggest that control-theoretic approaches offer a principled and practical path toward intelligent request scheduling in modern LLM serving systems.
+We presented Orbit, a Model Predictive Control framework for adaptive request routing in disaggregated LLM serving. By formulating routing as an optimal control problem over queue dynamics, Orbit augments standard algorithms like Power-of-Two-Choices with predictive capability. Our simulation study demonstrates that MPC provides 15--16\% mean latency reduction under steady load and 37\% tail latency reduction under bursty conditions, with benefits concentrated in heterogeneous deployments where server capacities differ by 2--4$\times$. Importantly, MPC adds no benefit (and slight overhead) for homogeneous deployments, providing clear deployment guidance: enable MPC when servers have different capacities, disable it otherwise. These results suggest that control-theoretic approaches offer a principled and practical path toward intelligent request scheduling in modern LLM serving systems.
 
 \paragraph{Acknowledgments.} We thank the anonymous reviewers for their feedback.
 
