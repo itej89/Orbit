@@ -1,214 +1,174 @@
-# Orbit Cluster Experiment Plan
+# Orbit MPC Cluster Experiment Plan
 
 ## Overview
 
-This document outlines the experimental plan for validating Orbit MPC on real vLLM disaggregated serving workloads using the AMD cluster.
+This document outlines the comprehensive experiment plan for evaluating Orbit's MPC-augmented 
+routing on real vLLM disaggregated serving clusters.
 
-## Cluster Access
+## Goals
 
-- **Login Node:** `useocpslog-002.amd.com`
-- **Important:** Do NOT run Docker images or heavy workloads on the login node. Submit jobs to compute nodes.
+1. **Validate simulation findings**: Confirm that MPC provides 15-16% improvement with 2-4× heterogeneity
+2. **Test variable ISL/OSL**: Prove MPC handles real-world input/output length distributions
+3. **Scale testing**: Verify MPC benefits hold across 2, 4, 8 GPU configurations
+4. **Model diversity**: Test across different model architectures (dense, MoE)
 
-## Docker Images
+## Cluster Configuration
 
-| Image | Description |
-|-------|-------------|
-| `rocm/vllm:v0.14.0_amd_dev` | Base upstream vLLM image |
-| `rocm/pytorch-private:vllm-v0.14.0_amd_dev_aiter_nixl_ravgupta` | Completed image with AITER+NIXL |
-| `rocm/pytorch-private:vllm-v0.14.0_orbit_mpc` | **To Build:** Image with Orbit MPC router |
-
-## Models to Test
-
-| Model | Type | Size | TP Config | Notes |
-|-------|------|------|-----------|-------|
-| `meta-llama/Llama-3.1-70B-Instruct` | Dense | 70B | TP=8 | Baseline dense model |
-| `Qwen/Qwen1.5-MoE-A2.7B` | MoE | 14.3B (2.7B active) | TP=2,4 | Small MoE |
-| `allenai/OLMoE-1B-7B-0924` | MoE | 7B (1B active) | TP=2 | Small MoE |
-| `mistralai/Mixtral-8x7B-Instruct-v0.1` | MoE | 47B | TP=4,8 | Medium MoE |
-| `Qwen/Qwen2-VL-7B-Instruct` | Vision+MoE | 7B | TP=2,4 | Vision model |
-
-## Server Configurations
-
-### Homogeneous Configurations
-
-All prefill and decode servers use the same TP/EP settings.
-
-| Config | Prefill Servers | Decode Servers | Total GPUs |
-|--------|-----------------|----------------|------------|
-| 2P2D-TP8 | 2 × TP=8 | 2 × TP=8 | 32 |
-| 4P4D-TP8 | 4 × TP=8 | 4 × TP=8 | 64 |
-| 2P2D-TP4 | 2 × TP=4 | 2 × TP=4 | 16 |
-
-### Heterogeneous Configurations (Key Focus)
-
-Mixed TP settings to create capacity asymmetry - this is where MPC should show benefit.
-
-| Config | Prefill Servers | Decode Servers | Notes |
-|--------|-----------------|----------------|-------|
-| HET-2P2D-A | P1:TP=8, P2:TP=4 | D1:TP=8, D2:TP=4 | 2× capacity diff |
-| HET-2P2D-B | P1:TP=8, P2:TP=2 | D1:TP=8, D2:TP=2 | 4× capacity diff |
-| HET-4P4D | P1-2:TP=8, P3-4:TP=4 | D1-2:TP=8, D3-4:TP=4 | Mixed pool |
-| HET-MIXED | P1:TP=8, P2:TP=4, P3:TP=2 | D1:TP=8, D2:TP=4 | Highly varied |
-
-## GPU Allocation Strategy
-
-Use `HIP_VISIBLE_DEVICES` to control GPU assignment and avoid contention.
-
-```bash
-# Example: 8-GPU node, running TP=4 prefill and TP=4 decode
-# Prefill server (GPUs 0-3)
-HIP_VISIBLE_DEVICES=0,1,2,3 python -m vllm.entrypoints.openai.api_server ...
-
-# Decode server (GPUs 4-7)
-HIP_VISIBLE_DEVICES=4,5,6,7 python -m vllm.entrypoints.openai.api_server ...
-```
-
-### Multi-Node Example
-
-```bash
-# Node 1: Prefill servers
-# Server P1 (TP=8, all GPUs)
-HIP_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m vllm.entrypoints.openai.api_server \
-    --model meta-llama/Llama-3.1-70B-Instruct \
-    --tensor-parallel-size 8 \
-    --port 8100
-
-# Node 2: Prefill P2 (TP=4, first 4 GPUs) + Decode D1 (TP=4, last 4 GPUs)
-# Terminal 1:
-HIP_VISIBLE_DEVICES=0,1,2,3 python -m vllm.entrypoints.openai.api_server \
-    --model meta-llama/Llama-3.1-70B-Instruct \
-    --tensor-parallel-size 4 \
-    --port 8101
-
-# Terminal 2:
-HIP_VISIBLE_DEVICES=4,5,6,7 python -m vllm.entrypoints.openai.api_server \
-    --model meta-llama/Llama-3.1-70B-Instruct \
-    --tensor-parallel-size 4 \
-    --port 8200
-```
-
-## Routing Policies to Compare
-
-| Policy | Description | MPC Enabled |
-|--------|-------------|-------------|
-| `round_robin` | Baseline cyclic | No |
-| `random` | Baseline random | No |
-| `power_of_two` | vLLM default PO2 | No |
-| `cache_aware` | vLLM cache-aware | No |
-| `mpc_round_robin` | Orbit MPC + RR | Yes |
-| `mpc_power_of_two` | Orbit MPC + PO2 | Yes |
-
-## Workload Configurations
-
-### Synthetic Workloads
-
-| Workload | Prompt Length | Output Length | Arrival Pattern |
-|----------|---------------|---------------|-----------------|
-| SHORT | 128-256 tokens | 32-64 tokens | Poisson λ=10 |
-| MEDIUM | 512-1024 tokens | 64-256 tokens | Poisson λ=5 |
-| LONG | 2048-4096 tokens | 256-512 tokens | Poisson λ=2 |
-| MIXED | Variable | Variable | Bursty |
-
-### Real-World Traces (Optional)
-
-- ShareGPT conversation traces
-- Code completion patterns
-
-## Metrics to Collect
-
-### Latency Metrics
-- Mean, P50, P90, P95, P99 end-to-end latency
-- Time-to-First-Token (TTFT)
-- Inter-Token Latency (ITL)
-
-### Throughput Metrics
-- Requests per second (sustained)
-- Tokens per second (input + output)
-- Throughput variance over time
-
-### System Metrics
-- GPU utilization per server
-- Memory utilization
-- Queue depths over time
-- MPC weight trajectories
+- **Cluster**: useocpslog-002.amd.com
+- **Partition**: amd-rccl (34 idle nodes available)
+- **GPUs per node**: 8x AMD MI250X
+- **Docker image**: `rocm/pytorch-private:vllm-v0.14.0_orbit_mpc`
 
 ## Experiment Matrix
 
-### Phase 1: Homogeneous Validation
-Verify MPC doesn't hurt performance when servers are equal.
+### Server Configurations (Heterogeneity Testing)
 
-| Model | Config | Policies | Expected Result |
-|-------|--------|----------|-----------------|
-| Llama-70B | 2P2D-TP8 | PO2, MPC-PO2 | Similar performance |
-| Mixtral-8x7B | 2P2D-TP8 | PO2, MPC-PO2 | Similar performance |
+| Config Name | Prefill TP | Decode TP | Total GPUs | Heterogeneity Ratio |
+|-------------|------------|-----------|------------|---------------------|
+| homo_8x8    | 8          | 8         | 16         | 1.0× (baseline)     |
+| het_8x4     | 8          | 4         | 12         | 2.0×                |
+| het_8x2     | 8          | 2         | 10         | 4.0×                |
+| het_4x2     | 4          | 2         | 6          | 2.0×                |
+| het_2p2d    | 2×4        | 2×2       | 12         | Multi-instance      |
 
-### Phase 2: Heterogeneous Evaluation (Key)
-Validate MPC improves load balancing under capacity asymmetry.
+**Rationale**: Different TP configurations create natural heterogeneity:
+- Higher TP = lower per-GPU memory pressure but more communication overhead
+- Lower TP = higher memory pressure but faster small batch processing
+- This creates the capacity asymmetry that MPC is designed to handle
 
-| Model | Config | Policies | Expected Result |
-|-------|--------|----------|-----------------|
-| Llama-70B | HET-2P2D-A | All | MPC > baselines |
-| Llama-70B | HET-2P2D-B | All | MPC >> baselines |
-| Mixtral-8x7B | HET-4P4D | All | MPC > baselines |
-| OLMoE-1B-7B | HET-2P2D-A | All | MPC > baselines |
+### Workload Patterns (Variable ISL/OSL)
 
-### Phase 3: Scale-Out
-Test at larger scale.
+| Pattern Name    | ISL Range   | OSL Range   | Description                    |
+|-----------------|-------------|-------------|--------------------------------|
+| uniform_short   | 100-500     | 20-50       | Chatbot queries, short answers |
+| uniform_long    | 100-500     | 100-500     | Longer conversations           |
+| variable_isl    | 50-2000     | 50-100      | Document Q&A, varied context   |
+| variable_osl    | 200-400     | 10-500      | Code completion, varied output |
+| high_variance   | 50-3000     | 10-1000     | Mixed workload (stress test)   |
 
-| Model | Config | Policies | Notes |
-|-------|--------|----------|-------|
-| Llama-70B | 4P4D-TP8 | PO2, MPC-PO2 | 64 GPUs |
-| Llama-70B | HET-4P4D | All | Heterogeneous scale |
+**Why Variable ISL/OSL Matters**:
+- Prefill time scales with ISL (compute-bound)
+- Decode time scales with OSL × batch_size (memory-bound)
+- Static routing doesn't adapt to these dynamics
+- MPC predicts queue evolution based on observed rates
 
-## Scripts to Create
+### Models to Test
 
-1. `setup_cluster_env.sh` - Environment setup
-2. `start_vllm_servers.sh` - Launch vLLM servers with configs
-3. `start_orbit_router.sh` - Launch Orbit router
-4. `run_benchmark.sh` - Run workload and collect metrics
-5. `collect_results.sh` - Aggregate results
-6. `plot_results.py` - Generate figures for paper
+| Model | Type | Size | Why Test |
+|-------|------|------|----------|
+| Llama-3.1-70B-Instruct | Dense | 70B | Production workload baseline |
+| Qwen1.5-MoE-A2.7B | MoE | 2.7B active | Expert routing dynamics |
+| OLMoE-1B-7B | MoE | 1B active | Smaller MoE variant |
+| Mixtral-8x7B | MoE | 8×7B | Popular MoE baseline |
 
-## Directory Structure
+## Experiment Schedule
 
+### Phase 1: Baseline Validation (Day 1)
 ```
-cluster_experiments/
-├── EXPERIMENT_PLAN.md          # This file
-├── configs/
-│   ├── models.yaml             # Model configurations
-│   ├── servers.yaml            # Server configurations
-│   └── workloads.yaml          # Workload definitions
-├── scripts/
-│   ├── setup_cluster_env.sh
-│   ├── start_vllm_servers.sh
-│   ├── start_orbit_router.sh
-│   ├── run_benchmark.sh
-│   └── collect_results.sh
-├── results/
-│   └── (experiment outputs)
-└── analysis/
-    └── plot_results.py
+homo_8x8 × uniform_short × [baseline, mpc] × Llama-70B
+het_8x4  × uniform_short × [baseline, mpc] × Llama-70B
+het_8x2  × uniform_short × [baseline, mpc] × Llama-70B
 ```
+**Expected**: Confirm homogeneous overhead, heterogeneous improvement
+
+### Phase 2: ISL/OSL Variance (Day 1-2)
+```
+het_8x4 × [all workloads] × [baseline, mpc] × Llama-70B
+```
+**Expected**: MPC maintains advantage across workload patterns
+
+### Phase 3: Scale Testing (Day 2)
+```
+[all configs] × variable_osl × [baseline, mpc] × Llama-70B
+```
+**Expected**: Verify benefits across GPU configurations
+
+### Phase 4: Model Diversity (Day 3)
+```
+het_8x4 × uniform_short × [baseline, mpc] × [all models]
+```
+**Expected**: MPC works across model architectures
+
+## Metrics Collected
+
+### Latency
+- Mean end-to-end latency (ms)
+- P50, P90, P95, P99 latency (ms)
+- Standard deviation (variance indicator)
+
+### Throughput
+- Requests per second achieved
+- Tokens per second (total)
+- Success rate (%)
+
+### Time-to-First-Token (TTFT)
+- Mean TTFT (ms)
+- P99 TTFT (ms)
+- Critical for interactive applications
+
+### System Metrics
+- GPU utilization per server
+- Queue depths over time
+- MPC weight evolution (when enabled)
+
+## Expected Results
+
+Based on simulation findings:
+
+| Configuration | MPC Mean Improvement | MPC P99 Improvement |
+|---------------|---------------------|---------------------|
+| Homogeneous   | -5% to -10% (overhead) | ~0%              |
+| 2× Het.       | +12% to +18%        | +5% to +15%         |
+| 4× Het.       | +10% to +16%        | +20% to +40%        |
+| Bursty load   | +0% to +5%          | +30% to +40%        |
+
+## Running Experiments
+
+### Quick Test (Single Configuration)
+```bash
+ssh ravgupta@useocpslog-002.amd.com
+cd /path/to/orbit_paper/cluster_experiments/slurm
+./submit_orbit_experiments.sh --quick --dry-run  # Preview
+./submit_orbit_experiments.sh --quick             # Submit
+```
+
+### Full Matrix
+```bash
+./submit_orbit_experiments.sh --dry-run  # Preview all jobs
+./submit_orbit_experiments.sh            # Submit all jobs
+```
+
+### Monitor Progress
+```bash
+squeue -u $USER
+tail -f results/*/logs/*.out
+```
+
+### Analyze Results
+```bash
+python ../analysis/analyze_cluster_results.py results/<timestamp>/
+```
+
+## Deliverables
+
+1. **Raw results**: JSON metrics for each experiment
+2. **Comparison tables**: MPC vs baseline across all configurations
+3. **Figures**: 
+   - Latency CDFs by heterogeneity level
+   - MPC improvement vs heterogeneity ratio
+   - Throughput stability (time series)
+4. **Paper updates**: Final numerical results for JSSPP paper
 
 ## Timeline
 
-1. **Week 1:** Set up Docker images, validate basic vLLM disagg
-2. **Week 2:** Integrate MPC router, test on homogeneous config
-3. **Week 3:** Run heterogeneous experiments
-4. **Week 4:** Analysis, paper updates, scale-out tests
+- **Day 1**: Phases 1-2, initial validation
+- **Day 2**: Phase 3, scale testing
+- **Day 3**: Phase 4, model diversity + analysis
+- **Day 4**: Paper updates with real cluster results
 
 ## Notes
 
-### vLLM Disaggregation Setup
-
-From the MAD-private repo (`ravgupta/add_vllm_router` branch):
-
-```bash
-# Modified vLLM server args for disagg
-["DeepSeek-V3"]="--tensor-parallel-size 8 --compilation-config '{\"cudagraph_mode\":\"PIECEWISE\"}' --no-enable-prefix-caching --block-size 1"
-```
-
-### Known Issues
-
-- `full_cuda_graph` not valid in vLLM 0.14.0rc3 - removed from compilation-config
-- Need NIXL connector for prefill-decode transfer
+- Each experiment runs for 120 seconds of benchmarking
+- Allow 10-15 minutes per job (startup + warmup + benchmark + cleanup)
+- Full matrix: ~50 experiments × 15 min = ~12 hours total
+- Use `--quick` flag for rapid iteration during debugging

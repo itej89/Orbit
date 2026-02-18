@@ -387,11 +387,11 @@ def main():
     parser.add_argument("--pattern", choices=["steady", "bursty", "ramping"], default="steady")
     parser.add_argument("--burst-multiplier", type=float, default=3.0)
     
-    # Prompt config
-    parser.add_argument("--min-prompt", type=int, default=50, dest="min_prompt_tokens")
-    parser.add_argument("--max-prompt", type=int, default=500, dest="max_prompt_tokens")
-    parser.add_argument("--min-output", type=int, default=16, dest="min_output_tokens")
-    parser.add_argument("--max-output", type=int, default=128, dest="max_output_tokens")
+    # Prompt config (ISL = Input Sequence Length, OSL = Output Sequence Length)
+    parser.add_argument("--min-prompt", "--isl-min", type=int, default=50, dest="min_prompt_tokens")
+    parser.add_argument("--max-prompt", "--isl-max", type=int, default=500, dest="max_prompt_tokens")
+    parser.add_argument("--min-output", "--osl-min", type=int, default=16, dest="min_output_tokens")
+    parser.add_argument("--max-output", "--osl-max", type=int, default=128, dest="max_output_tokens")
     
     # Output
     parser.add_argument("--output-dir", default="results")

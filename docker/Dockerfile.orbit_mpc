@@ -1,0 +1,52 @@
+# Orbit MPC-Augmented vLLM Router
+# Based on the vLLM ROCm image with MPC controller integration
+
+ARG BASE_IMAGE=rocm/pytorch-private:vllm-v0.14.0_amd_dev_aiter_nixl_ravgupta
+FROM ${BASE_IMAGE}
+
+LABEL maintainer="ravi.gupta@amd.com"
+LABEL description="vLLM with Orbit MPC-augmented routing for disaggregated inference"
+LABEL version="0.1.0"
+
+# Install MPC dependencies
+RUN pip install --no-cache-dir \
+    cvxpy>=1.4.0 \
+    osqp>=0.6.3 \
+    scipy>=1.11.0 \
+    fastapi>=0.109.0 \
+    uvicorn>=0.27.0 \
+    httpx>=0.26.0 \
+    numpy>=1.24.0
+
+# Create Orbit directory
+WORKDIR /opt/orbit
+
+# Copy MPC controller and router components
+COPY vllm_router_fork/scripts/mpc_controller.py /opt/orbit/mpc_controller.py
+COPY simulation/router_v2.py /opt/orbit/router.py
+COPY simulation/prefill_server_v2.py /opt/orbit/prefill_server.py
+COPY simulation/decode_server_v2.py /opt/orbit/decode_server.py
+COPY simulation/benchmark_v2.py /opt/orbit/benchmark.py
+
+# Copy cluster experiment scripts
+COPY cluster_experiments/scripts/ /opt/orbit/scripts/
+
+# Make scripts executable
+RUN chmod +x /opt/orbit/scripts/*.sh 2>/dev/null || true
+RUN chmod +x /opt/orbit/*.py
+
+# Create entrypoint script for different modes
+COPY docker/entrypoint.sh /opt/orbit/entrypoint.sh
+RUN chmod +x /opt/orbit/entrypoint.sh
+
+# Environment variables
+ENV ORBIT_HOME=/opt/orbit
+ENV PYTHONPATH="${PYTHONPATH}:/opt/orbit"
+
+# Default ports
+EXPOSE 8000 8090
+
+WORKDIR /workspace
+
+ENTRYPOINT ["/opt/orbit/entrypoint.sh"]
+CMD ["--help"]
