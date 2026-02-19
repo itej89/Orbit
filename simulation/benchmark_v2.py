@@ -388,10 +388,15 @@ def main():
     parser.add_argument("--burst-multiplier", type=float, default=3.0)
     
     # Prompt config (ISL = Input Sequence Length, OSL = Output Sequence Length)
-    parser.add_argument("--min-prompt", "--isl-min", type=int, default=50, dest="min_prompt_tokens")
-    parser.add_argument("--max-prompt", "--isl-max", type=int, default=500, dest="max_prompt_tokens")
-    parser.add_argument("--min-output", "--osl-min", type=int, default=16, dest="min_output_tokens")
-    parser.add_argument("--max-output", "--osl-max", type=int, default=128, dest="max_output_tokens")
+    parser.add_argument("--min-prompt", type=int, default=50, dest="min_prompt_tokens")
+    parser.add_argument("--max-prompt", type=int, default=500, dest="max_prompt_tokens")
+    parser.add_argument("--min-output", type=int, default=16, dest="min_output_tokens")
+    parser.add_argument("--max-output", type=int, default=128, dest="max_output_tokens")
+    # Aliases for ISL/OSL
+    parser.add_argument("--isl-min", type=int, dest="min_prompt_tokens")
+    parser.add_argument("--isl-max", type=int, dest="max_prompt_tokens")
+    parser.add_argument("--osl-min", type=int, dest="min_output_tokens")
+    parser.add_argument("--osl-max", type=int, dest="max_output_tokens")
     
     # Output
     parser.add_argument("--output-dir", default="results")

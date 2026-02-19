@@ -183,10 +183,10 @@ def select_round_robin(pool, inflight, mpc_weights, rr_iter):
 
 def select_po2_vanilla(pool, inflight, mpc_weights):
     """Power-of-Two-Choices without MPC weights."""
-    a, b = random.sample(pool, min(2, len(pool)))
     if len(pool) == 1:
-        return a
+        return pool[0]
     
+    a, b = random.sample(pool, 2)
     score_a = inflight.get(a["id"], 0)
     score_b = inflight.get(b["id"], 0)
     return a if score_a <= score_b else b
@@ -194,9 +194,10 @@ def select_po2_vanilla(pool, inflight, mpc_weights):
 
 def select_po2_weighted(pool, inflight, mpc_weights):
     """Power-of-Two-Choices with MPC weights."""
-    a, b = random.sample(pool, min(2, len(pool)))
     if len(pool) == 1:
-        return a
+        return pool[0]
+    
+    a, b = random.sample(pool, 2)
     
     wa = mpc_weights.get(a["id"], 1.0)
     wb = mpc_weights.get(b["id"], 1.0)

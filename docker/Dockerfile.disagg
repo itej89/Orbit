@@ -1,0 +1,150 @@
+# PR#134 Dockerfile - using upstream rocm/vllm:v0.14.0_amd_dev as base
+# Changes from original PR Dockerfile:
+#   1. Base image: rocm/vllm:v0.14.0_amd_dev (has vLLM 0.14.0rc3, aiter, ROCm 7.0)
+#   2. Added apt https fix for cluster
+#   3. No nixl_alias.pth - breaks aiter JIT; vLLM has rixl fallback already
+#   4. Skipped vLLM source build - base already has vLLM 0.14.0rc3
+#   5. Added shallow vLLM clone for test files only (toy_proxy_server.py)
+
+ARG BASE_IMAGE=rocm/vllm:v0.14.0_amd_dev
+FROM ${BASE_IMAGE}
+
+WORKDIR /root
+
+# ROCm location
+ENV _ROCM_DIR=/opt/rocm
+
+# UCX configuration options
+ENV _UCX_SOURCE=https://github.com/ROCm/ucx.git
+ENV _UCX_BRANCH=v1.19.x
+ENV _UCX_INSTALL_DIR=/usr/local/ucx/
+
+# RIXL configuration options
+ENV _RIXL_SOURCE=github.com/ROCm/RIXL.git
+ENV _RIXL_BRANCH=develop
+ENV _RIXL_INSTALL_DIR=/usr/local/RIXL/install
+
+ENV _NIXLBENCH_INSTALL_DIR=/usr/local/RIXL
+
+# [CLUSTER-SPECIFIC] Convert http to https in apt sources (required for some clusters)
+RUN sed -i 's/http:/https:/g' /etc/apt/sources.list.d/*.list 2>/dev/null || true && \
+    sed -i 's/http:/https:/g' /etc/apt/sources.list 2>/dev/null || true
+
+# install build dependencies
+RUN pip3 install meson==0.64.0
+RUN pip3 install "pybind11[global]"
+
+RUN apt-get update && apt-get install -y \
+    autoconf \
+    automake \
+    libtool \
+    autogen \
+    pkg-config \
+    m4 || apt --fix-broken install -y
+
+RUN set -e && apt update
+
+RUN set -e && apt -y install gcc make libtool autoconf librdmacm-dev rdmacm-utils infiniband-diags ibverbs-utils perftest ethtool libibverbs-dev rdma-core strace
+RUN apt install -y libgflags-dev
+
+# Install UCX
+RUN git clone ${_UCX_SOURCE} -b ${_UCX_BRANCH} && \
+    cd ucx && \
+    ./autogen.sh && \
+    mkdir -p build && \
+    cd build && \
+    ../configure --prefix=${_UCX_INSTALL_DIR} --with-rocm=${_ROCM_DIR} --disable-go --disable-java --disable-assertions --enable-mt && \
+    make -j && \
+    make install && \
+    echo "UCX installation completed."
+
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/ucx/lib/
+ENV PATH=$PATH:/usr/local/ucx/bin/
+
+# install local dependency
+RUN set -e && apt update && \
+    apt install -y libaio-dev liburing-dev etcd etcd-server etcd-client libcpprest-dev libgrpc-dev libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc && \
+    wget https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz && \
+    tar -xzf v1.14.0.tar.gz && \
+    cd googletest-1.14.0 && \
+    mkdir -p build && \
+    cd build && \
+    cmake -DBUILD_SHARED_LIBS=on .. && \
+    make -j && \
+    make install && \
+    cd ../..
+
+# Install etcd binary
+# Upstream image has no pre-existing etcd, so no conflict.
+# Install into /usr/local/bin/etcd/ directory (scripts expect /usr/local/bin/etcd//etcd)
+RUN wget https://github.com/etcd-io/etcd/releases/download/v3.6.0-rc.5/etcd-v3.6.0-rc.5-linux-amd64.tar.gz -O /tmp/etcd.tar.gz && \
+    mkdir -p /usr/local/bin/etcd && \
+    tar -xvf /tmp/etcd.tar.gz -C /usr/local/bin/etcd --strip-components=1 && \
+    rm /tmp/etcd.tar.gz
+ENV PATH=$PATH:/usr/local/bin/etcd/
+
+# install etcd-cpp-apiv3
+RUN set -e && echo "Compiling etcd-cpp API" && \
+    git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git && \
+    cd etcd-cpp-apiv3 && \
+    mkdir build && cd build && \
+    cmake -DCMAKE_FIND_ROOT_PATH=/usr/grpc .. && \
+    make -j && \
+    make install && \
+    cd ../.. && \
+    echo "etcd-cpp installation completed."
+
+# install rixl
+ARG GITHUB_AMD_USR
+ARG GITHUB_AMD_PAT
+
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
+ENV CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/usr/local/lib/cmake/etcd-cpp-api/
+ENV PATH=/root/.local/bin:${_UCX_INSTALL_DIR}/bin:$PATH
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${_RIXL_INSTALL_DIR}/lib/x86_64-linux-gnu
+ENV CMAKE_PREFIX_PATH=/usr/local/lib/cmake/etcd-cpp-api/:/usr/grpc/lib/cmake/:/usr/local/lib/cmake
+
+RUN set -e && git clone https://${GITHUB_AMD_USR}:${GITHUB_AMD_PAT}@${_RIXL_SOURCE} -b ${_RIXL_BRANCH} && \
+    cd RIXL && \
+    git checkout ed772c8d0d8a47c7b4e1a622b13c4f6087a4972a && \
+    meson setup build/ --prefix=${_RIXL_INSTALL_DIR} \
+        -Ducx_path=${_UCX_INSTALL_DIR} \
+        -Ddisable_gds_backend=true \
+        -Dcudapath_inc=${_ROCM_DIR}/include \
+        -Dcudapath_lib=${_ROCM_DIR}/lib && \
+    cd build && \
+    ninja && \
+    ninja install && \
+    echo "RIXL cpp API installation complete."
+
+# installing python rixl package
+RUN set -e && cd RIXL && \
+    pip install --config-settings=setup-args="-Dcudapath_inc=${_ROCM_DIR}/include" \
+                --config-settings=setup-args="-Dcudapath_lib=${_ROCM_DIR}/lib" \
+                --config-settings=setup-args="-Ducx_path=${_UCX_INSTALL_DIR}" \
+                --config-settings=setup-args="-Ddisable_gds_backend=true" .
+
+# NOTE: Intentionally NOT creating nixl_alias.pth
+# The .pth file forces 'import rixl' at Python startup which breaks aiter's JIT kernel compilation.
+# vLLM's nixl_connector.py already handles both nixl and rixl imports via try/except fallback.
+
+ENV LD_LIBRARY_PATH=${_RIXL_INSTALL_DIR}/lib:$LD_LIBRARY_PATH
+
+# Compiling NixlBench
+RUN set -e && echo "Compiling NixlBench" && \
+    cd RIXL/benchmark/nixlbench && \
+    meson setup build \
+        -Dnixl_path=${_RIXL_INSTALL_DIR} \
+        -Dcudapath_inc=${_ROCM_DIR}/include \
+        -Dcudapath_lib=${_ROCM_DIR}/lib \
+        --prefix=${_NIXLBENCH_INSTALL_DIR} && \
+    cd build && \
+    ninja && \
+    ninja install && \
+    echo "NixlBench compilation complete"
+
+# Clone vLLM source tree for test files (toy_proxy_server.py)
+# NOT building vLLM - base image already has vLLM 0.14.0rc3 installed via pip
+RUN git clone --depth 1 https://github.com/vllm-project/vllm.git /tmp/vllm-src && \
+    cp -r /tmp/vllm-src/tests /app/vllm/tests && \
+    rm -rf /tmp/vllm-src

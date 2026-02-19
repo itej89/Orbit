@@ -24,26 +24,28 @@ RESULTS_BASE="${RESULTS_BASE:-$PROJECT_DIR/cluster_experiments/results}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 RESULTS_DIR="$RESULTS_BASE/$TIMESTAMP"
 
-# Models to test
+# HuggingFace token (required for gated models like Llama)
+HF_TOKEN="${HF_TOKEN:-}"
+
+# Models to test (use non-gated models or ensure HF_TOKEN is set for gated ones)
 MODELS=(
-    "meta-llama/Llama-3.1-70B-Instruct"
+    "mistralai/Mistral-7B-Instruct-v0.3"
+    # "meta-llama/Llama-3.1-70B-Instruct"  # Requires HF_TOKEN
     # "Qwen/Qwen1.5-MoE-A2.7B"
     # "allenai/OLMoE-1B-7B"
 )
 
 # Server configurations: name:prefill_tp:decode_tp:prefill_gpus:decode_gpus
 # Format allows testing heterogeneous TP configurations
+# Using smaller configs for 7B model
 CONFIGS=(
     # Homogeneous configs
-    "homo_8x8:8:8:8:8"          # 8 GPU prefill + 8 GPU decode (16 GPUs total)
+    "homo_2x2:2:2:2:2"          # 2 GPU prefill + 2 GPU decode (4 GPUs total)
     
     # Heterogeneous configs (different TP)
-    "het_8x4:8:4:8:4"           # 8 GPU prefill + 4 GPU decode (12 GPUs)
-    "het_8x2:8:2:8:2"           # 8 GPU prefill + 2 GPU decode (10 GPUs)
+    "het_2x1:2:1:2:1"           # 2 GPU prefill + 1 GPU decode (3 GPUs)
     "het_4x2:4:2:4:2"           # 4 GPU prefill + 2 GPU decode (6 GPUs)
-    
-    # Multi-instance heterogeneous (2 prefill + 2 decode)
-    "het_2p2d_4x2:4:2:8:4"      # 2x4GPU prefill + 2x2GPU decode (12 GPUs)
+    "het_4x1:4:1:4:1"           # 4 GPU prefill + 1 GPU decode (5 GPUs)
 )
 
 # Workload patterns with variable ISL/OSL
@@ -157,17 +159,18 @@ docker run -d \\
     --shm-size=64GB \\
     -e HIP_VISIBLE_DEVICES="\$PREFILL_GPUS" \\
     -e VLLM_LOGGING_LEVEL=INFO \\
+    -e HF_TOKEN="\${HF_TOKEN:-}" \\
+    -e HUGGING_FACE_HUB_TOKEN="\${HF_TOKEN:-}" \\
     ${DOCKER_IMAGE} \\
     vllm --model "${model}" \\
     --tensor-parallel-size ${prefill_tp} \\
     --port 8100 \\
-    --kv-transfer-config '{"kv_connector": "PyNcclConnector"}' \\
     --no-enable-prefix-caching
 
 # Wait for prefill server
 echo "Waiting for prefill server..."
 for i in \$(seq 1 120); do
-    if curl -s http://localhost:8100/health | grep -q "ok"; then
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:8100/health | grep -q "200"; then
         echo "Prefill server ready"
         break
     fi
@@ -198,16 +201,17 @@ docker run -d \\
     --shm-size=64GB \\
     -e HIP_VISIBLE_DEVICES="\$DECODE_GPUS" \\
     -e VLLM_LOGGING_LEVEL=INFO \\
+    -e HF_TOKEN="\${HF_TOKEN:-}" \\
+    -e HUGGING_FACE_HUB_TOKEN="\${HF_TOKEN:-}" \\
     ${DOCKER_IMAGE} \\
     vllm --model "${model}" \\
     --tensor-parallel-size ${decode_tp} \\
-    --port 8200 \\
-    --kv-transfer-config '{"kv_connector": "PyNcclConnector"}'
+    --port 8200
 
 # Wait for decode server
 echo "Waiting for decode server..."
 for i in \$(seq 1 120); do
-    if curl -s http://localhost:8200/health | grep -q "ok"; then
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:8200/health | grep -q "200"; then
         echo "Decode server ready"
         break
     fi
@@ -331,7 +335,8 @@ fi
 # Quick mode: fewer experiments
 if [ "$QUICK_MODE" = "true" ]; then
     models_to_test=("${models_to_test[0]}")
-    configs_to_test=("homo_8x8:8:8:8:8" "het_8x4:8:4:8:4")
+    # Use configs that fit on a single 8-GPU node (prefill_gpus + decode_gpus <= 8)
+    configs_to_test=("homo_4x4:4:4:4:4" "het_4x2:4:2:4:2")
     WORKLOADS=("uniform_short:100:500:20:50" "variable_osl:200:400:10:500")
 fi
 
