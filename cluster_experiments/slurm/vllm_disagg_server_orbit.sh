@@ -45,11 +45,12 @@ host_name=$(hostname)
 # Dynamic Port Allocation
 # =============================================================================
 
-DEFAULT_BARRIER_PORT=5000
-DEFAULT_ETCD_CLIENT_PORT=2379
-DEFAULT_ETCD_PEER_PORT=2380
-DEFAULT_VLLM_PORT=2584
-DEFAULT_NIXL_PORT=14600
+# Use high port ranges to avoid conflicts with other services on shared nodes
+DEFAULT_BARRIER_PORT=25000
+DEFAULT_ETCD_CLIENT_PORT=25379
+DEFAULT_ETCD_PEER_PORT=25380
+DEFAULT_VLLM_PORT=25584
+DEFAULT_NIXL_PORT=26600
 
 PORT_CONFIG_DIR="${PORT_CONFIG_DIR:-/port_config}"
 PORT_CONFIG_FILE="${PORT_CONFIG_DIR}/${SLURM_JOB_ID}_port_config.txt"
@@ -94,9 +95,9 @@ find_port_offset() {
 }
 
 allocate_ports() {
-    # Use job-ID-based offset to avoid collisions between sequential jobs
-    # Each job gets a deterministic unique offset (range 0-190, step 10)
-    PORT_OFFSET=$(( (SLURM_JOB_ID % 20) * 10 ))
+    # Use job-ID-based offset with wider range to avoid collisions
+    # Each job gets a deterministic unique offset (range 0-4900, step 50)
+    PORT_OFFSET=$(( (SLURM_JOB_ID % 100) * 50 ))
     echo "Job ${SLURM_JOB_ID}: Using deterministic port offset $PORT_OFFSET"
 
     # Verify primary port is available, fall back to dynamic search if not
@@ -136,8 +137,12 @@ declare -A MODEL_PREFILL_CONFIGS=(
     ["amd-Llama-3.3-70B-Instruct-FP8-KV"]="--tensor-parallel-size 8 --max-model-len 65536 --kv-cache-dtype fp8"
     ["DeepSeek-V3"]="--tensor-parallel-size 8 --compilation-config '{\"cudagraph_mode\":\"PIECEWISE\"}' --no-enable-prefix-caching --block-size 1"
     ["gpt-oss-120b"]="--tensor-parallel-size 8"
+    ["gpt-oss-20b"]="--tensor-parallel-size 8"
     ["Qwen14B"]="--tensor-parallel-size 8 --max-model-len 8192"
     ["Qwen32B"]="--tensor-parallel-size 8 --max-model-len 8192"
+    ["Qwen3-30B-A3B"]="--tensor-parallel-size 8 --max-model-len 8192"
+    ["DBRX-Instruct"]="--tensor-parallel-size 8 --max-model-len 8192"
+    ["GLM-4.7-Flash"]="--tensor-parallel-size 8 --max-model-len 8192"
 )
 
 declare -A MODEL_DECODE_CONFIGS=(
@@ -145,8 +150,12 @@ declare -A MODEL_DECODE_CONFIGS=(
     ["amd-Llama-3.3-70B-Instruct-FP8-KV"]="--tensor-parallel-size 8 --max-model-len 65536 --kv-cache-dtype fp8"
     ["DeepSeek-V3"]="--tensor-parallel-size 8 --compilation-config '{\"cudagraph_mode\":\"PIECEWISE\"}' --no-enable-prefix-caching --block-size 1"
     ["gpt-oss-120b"]="--tensor-parallel-size 8"
+    ["gpt-oss-20b"]="--tensor-parallel-size 8"
     ["Qwen14B"]="--tensor-parallel-size 8 --max-model-len 8192"
     ["Qwen32B"]="--tensor-parallel-size 8 --max-model-len 8192"
+    ["Qwen3-30B-A3B"]="--tensor-parallel-size 8 --max-model-len 8192"
+    ["DBRX-Instruct"]="--tensor-parallel-size 8 --max-model-len 8192"
+    ["GLM-4.7-Flash"]="--tensor-parallel-size 8 --max-model-len 8192"
 )
 
 declare -A MODEL_ENVS=(
@@ -154,6 +163,10 @@ declare -A MODEL_ENVS=(
     ["Llama-3.1-405B-Instruct-FP8-KV"]="VLLM_USE_V1=1 VLLM_V1_USE_PREFILL_DECODE_ATTENTION=1 AMDGCN_USE_BUFFER_OPS=1 VLLM_ROCM_USE_AITER=1 VLLM_ROCM_USE_AITER_RMSNORM=1 VLLM_USE_AITER_TRITON_ROPE=1 TRITON_HIP_ASYNC_COPY_BYPASS_PERMUTE=1 TRITON_HIP_USE_ASYNC_COPY=1 TRITON_HIP_USE_BLOCK_PINGPONG=1 TRITON_HIP_ASYNC_FAST_SWIZZLE=1 "
     ["DeepSeek-V3"]="VLLM_USE_V1=1 VLLM_ROCM_USE_AITER=1 VLLM_ROCM_USE_AITER_PAGED_ATTN=0 VLLM_ROCM_USE_AITER_RMSNORM=1 VLLM_USE_AITER_TRITON_SILU_MUL=0 "
     ["gpt-oss-120b"]="VLLM_USE_V1=1 VLLM_ROCM_USE_AITER=1 VLLM_ROCM_USE_AITER_TRITON_BF16_GEMM=0 VLLM_USE_AITER_UNIFIED_ATTENTION=1 VLLM_ROCM_USE_AITER_MHA=0 ROCM_TRITON_MOE_PRESHUFFLE_SCALES=0 "
+    ["gpt-oss-20b"]="VLLM_USE_V1=1 VLLM_ROCM_USE_AITER=1 VLLM_ROCM_USE_AITER_TRITON_BF16_GEMM=0 VLLM_USE_AITER_UNIFIED_ATTENTION=1 VLLM_ROCM_USE_AITER_MHA=0 ROCM_TRITON_MOE_PRESHUFFLE_SCALES=0 "
+    ["Qwen3-30B-A3B"]="VLLM_USE_V1=1 "
+    ["DBRX-Instruct"]="VLLM_USE_V1=1 "
+    ["GLM-4.7-Flash"]="VLLM_USE_V1=1 "
 )
 
 get_model_config() {
@@ -187,6 +200,9 @@ echo "Model: $MODEL_NAME | Prefill cfg: $PREFILL_MODEL_CONFIG"
 
 echo "Allocating ports..."
 allocate_ports
+
+# Ensure log directory exists inside the container to prevent tee SIGPIPE
+mkdir -p /run_logs/${SLURM_JOB_ID} 2>/dev/null || true
 
 # =============================================================================
 # Determine heterogeneous settings for this node
