@@ -42,7 +42,7 @@ bash "${SCRIPT_DIR}/start_decode.sh"
 
 echo ""
 echo "[*] Waiting for model load (120s)..."
-sleep 120
+sleep 360
 
 echo ""
 echo "=== Health checks ==="

@@ -35,7 +35,10 @@ docker run -d --name orbit_prefill \
     -v /shared_inference:/shared_inference \
     -e HOME=/shared_inference/vpolamre \
     -e USER="$(id -un)" \
-    -e VLLM_ROCM_USE_AITER=1 \
+    -e VLLM_ROCM_USE_AITER=0 \
+    -e AITER_JIT_DIR=/tmp/aiter_jit_prefill \
+    -e TRITON_CACHE_DIR=/tmp/triton_prefill \
+    -e VLLM_CACHE_ROOT=/tmp/vllm_prefill \
     -e VLLM_LOGGING_LEVEL=DEBUG \
     -e MORI_RDMA_DEVICES=mlx5_0,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_7,mlx5_8,mlx5_9 \
     -e MORI_IB_GID_INDEX=3 \
