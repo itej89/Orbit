@@ -1,0 +1,415 @@
+% main.tex
+%\documentclass{gtac}
+\documentclass[blind]{gtac}
+
+\usepackage{cite}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue]{hyperref}
+
+\SetWatermarkScale{0.3}
+\SetWatermarkAngle{30}
+\SetWatermarkColor{gray!20}
+
+\title{Orbit: MPC-Augmented Routing for Heterogeneous LLM Serving --- Design, Evaluation, and Lessons Learned\subtitle{Submitted Anonymously for Double-Blind Review}}
+
+\author{Author 1, Author 2, Author 3 \\
+AMD \\
+email1@amd.com, email2@amd.com, email3@amd.com}
+
+\begin{document}
+
+\maketitle
+
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\chead{{\sffamily\textcolor{red}{\fontsize{10}{12}\selectfont\textbf{DO NOT FORWARD – FOR GTAC'26 REVIEW COMMITTEE ONLY}}}}
+\thispagestyle{fancy}
+
+\begin{abstract}
+Heterogeneous LLM inference clusters — where servers differ in GPU generation,
+thermal state, or concurrency capacity — expose a gap in existing routers that
+treat all servers as identical. We design and implement \textbf{Orbit}, a
+request router that augments Power-of-Two-Choices (PO2) with a Model Predictive
+Control (MPC) layer that estimates per-server service rates and computes
+capacity-aware routing weights via a short-horizon quadratic program.
+We evaluate Orbit on AMD MI300X GPUs with five policies (Round Robin, Least
+Outstanding Requests, PO2, MPC-PO2, and a new Kalman-PO2) across a
+1$\times$--8$\times$ heterogeneity sweep and a 10,000-request convergence study.
+Our central finding is a \emph{negative result}: both MPC-PO2 and Kalman-PO2
+are consistently 15--20\% worse than PO2 and LOR at steady state, and this
+gap does not close even after 10,000 requests ($\approx$42 minutes of traffic).
+Kalman-PO2 shows a transient advantage in short runs (327\,ms vs.\ 386\,ms
+mean, $10\times$ lower P99) by eliminating PO2's burst variance, but this
+benefit does not persist.
+We identify the root cause --- reactive PO2 already exploits queue-depth
+signals optimally at moderate load, and both MPC and Kalman measure
+\emph{experienced} latency rather than \emph{intrinsic} capacity --- and
+derive concrete redesign directions: throughput-based rate estimation,
+TTFT-driven feedback, and hybrid reactive-predictive control. We present
+this as a cautionary case study in applying control-theoretic methods to
+LLM serving.
+\end{abstract}
+
+\keywords{LLM serving, request routing, load balancing, model predictive control,
+Kalman filter, heterogeneous inference, vLLM, ROCm, AMD MI300X, negative result}
+
+% -----------------------------------------------------------------------
+\section{Introduction}
+% -----------------------------------------------------------------------
+
+GPU clusters serving LLMs exhibit significant heterogeneity in practice:
+servers run on different GPU generations, experience variable thermal
+throttling, hold different amounts of cached KV data, and operate under
+mixed tenant workloads. A router that ignores these differences will
+overload slower servers, inflating tail latency even when aggregate capacity
+is sufficient.
+
+Reactive policies such as Least Outstanding Requests (LOR) and
+Power-of-Two-Choices (PO2) \cite{po2} respond to observed queue depth
+instantaneously but cannot, in principle, distinguish a server that is
+slow because it is overloaded from one that is intrinsically lower capacity.
+This motivates a predictive approach: if a router can \emph{learn} each
+server's throughput, it can steer traffic proportionally to capacity rather
+than reactively to queue depth.
+
+We present \textbf{Orbit}, which implements this idea by wrapping PO2 with
+a Model Predictive Control (MPC) \cite{mpc_book} layer. Orbit estimates
+per-server service rates via exponential moving averages (EMA) and solves a
+quadratic program (QP) every 100\,ms to compute routing weights that drive
+queue depths toward a target. The implementation integrates with AMD's vLLM
+ROCm stack and supports both standalone and prefill-decode disaggregated
+topologies.
+
+We evaluate Orbit thoroughly and report an \textbf{honest negative result}:
+MPC-PO2 does not outperform PO2 or LOR under any tested condition, and
+the performance gap is persistent --- it does not close with more traffic.
+We believe this result is more valuable than a selective positive report
+because it exposes \emph{why} queue-depth-based MPC fails for LLM routing
+and what signals would actually work.
+
+% -----------------------------------------------------------------------
+\section{Design}
+% -----------------------------------------------------------------------
+
+\subsection{System Architecture}
+
+Orbit is a FastAPI service between clients and a pool of vLLM servers.
+In \emph{single-pool} mode, each request goes to one server performing
+both prefill and decode. In \emph{PD-disaggregated} mode, the router
+selects a prefill and a decode server per request, injecting peer addresses
+into the request ID consumed by vLLM's KV-transfer connector.
+Four routing policies share the same infrastructure: \textbf{RR}
+(round-robin), \textbf{LOR} (min inflight count), \textbf{PO2} (sample
+two, pick lower weighted-inflight score), and \textbf{MPC-PO2} (PO2
+with MPC-computed per-server weights).
+
+\subsection{MPC Weight Controller}
+
+Every $\Delta t = 100$\,ms, Orbit solves a per-server QP to update weights
+$w_i$. Let $\hat{\mu}_i$ be the EMA service rate ($\alpha = 0.3$),
+$\bar{q}$ the mean inflight count, and $q^* = 1.0$ the normalized target.
+The horizon-$H$ QP is:
+
+\begin{align}
+\min_{w,\, q} \quad & \sum_{k=0}^{H-1} \!\left[ (q_{k+1} - q^*)^2
+    + \lambda(w_k - 1)^2 \right] \label{eq:mpc} \\
+\text{s.t.} \quad
+  & q_{k+1} = q_k + \Delta t \cdot
+    \tfrac{\lambda_a p_i - \hat{\mu}_i}{\bar{q}},\quad
+    q_{k+1} \geq 0,\quad
+    w_{\min} \leq w_k \leq w_{\max} \notag
+\end{align}
+
+\noindent where $\lambda_a$ is the arrival rate, $p_i = w_k/\sum_j w_j$
+is server $i$'s traffic fraction, and $\lambda=0.07$ penalizes weight
+deviation. We use $H=10$, $w_{\min}=0.1$, $w_{\max}=3.0$, solved with
+OSQP \cite{osqp} in under 1\,ms. The regularization $\lambda(w_k-1)^2$
+prevents extreme weights during estimation warm-up \cite{mpc_book}.
+
+% -----------------------------------------------------------------------
+\section{Evaluation}
+\label{sec:results}
+% -----------------------------------------------------------------------
+
+\subsection{Experimental Setup}
+
+All experiments run on AMD MI300X nodes (192\,GB HBM3/GPU) with
+vLLM v0.23.0 ROCm, serving Qwen3-8B in bfloat16 (\texttt{max-model-len=2048},
+\texttt{gpu-memory-utilization=0.15}). Heterogeneity is simulated via two
+vLLM servers on separate GPUs:
+\textbf{Server 0 (fast):} \texttt{max-num-seqs=64} (fixed);
+\textbf{Server 1 (slow):} \texttt{max-num-seqs} $\in \{64,32,16,8\}$,
+yielding 1$\times$--8$\times$ capacity ratios.
+Requests follow Poisson arrivals at 4\,req/s with 15 fixed prompts
+(\texttt{max\_tokens=50}). The router is freshly restarted before each
+policy run so MPC starts with no prior EMA state.
+
+\subsection{Heterogeneity Sweep}
+
+Table~\ref{tab:setA} shows results for 120 requests across all four
+heterogeneity levels.
+\textbf{RR} shows high P99 (1775--2587\,ms) from periodically routing
+to the slow server regardless of capacity.
+\textbf{LOR and PO2 perform comparably} across all ratios
+(mean 285--294\,ms), with PO2's random sampling introducing minor noise.
+\textbf{MPC-PO2 is 14--20\% worse} than PO2 at every heterogeneity
+level, with elevated stdev (42--50\,ms vs.\ 17--20\,ms for PO2).
+Critically, the MPC overhead is \emph{independent} of the heterogeneity
+ratio --- the same penalty at 1$\times$ as at 8$\times$ --- suggesting
+the problem is not the degree of heterogeneity but the nature of the
+routing signal.
+
+\begin{table}[h]
+\centering
+\caption{Heterogeneity sweep: 4\,rps, 120 req, fresh router per policy.}
+\label{tab:setA}
+\small
+\begin{tabular}{@{}c l r r r@{}}
+\toprule
+Hetero & Policy & Mean (ms) & Stdev (ms) & P99 (ms) \\
+\midrule
+\multirow{4}{*}{1$\times$}
+  & RR      & 413.8 & 431.7 & 2587.1 \\
+  & LOR     & \textbf{292.3} & 19.7 & 352.9 \\
+  & PO2     & 289.0 & 17.8 & 323.5 \\
+  & MPC-PO2 & 341.8 & 47.4 & 444.2 \\
+\midrule
+\multirow{4}{*}{4$\times$}
+  & RR      & 354.0 & 313.7 & 1828.4 \\
+  & LOR     & \textbf{285.2} & 17.7 & 330.9 \\
+  & PO2     & 285.9 & 19.7 & 344.4 \\
+  & MPC-PO2 & 326.4 & 45.8 & 429.4 \\
+\midrule
+\multirow{4}{*}{8$\times$}
+  & RR      & 353.8 & 338.1 & 2417.1 \\
+  & LOR     & \textbf{287.9} & 16.7 & 330.8 \\
+  & PO2     & 287.9 & 17.8 & 342.4 \\
+  & MPC-PO2 & 346.6 & 49.6 & 448.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Convergence Study: 10,000 Requests}
+
+To test whether MPC eventually converges past a cold-start period,
+we ran PO2, MPC-PO2, \emph{and} Kalman-PO2 for \textbf{10,000 requests}
+at 4\,rps with 8$\times$ heterogeneity ($\approx$42 minutes each),
+using fresh vLLM containers per policy.
+Table~\ref{tab:conv} shows per-200-request windows.
+The MPC gap \emph{never closes}: MPC-PO2 is 13--22\% worse than PO2
+from the first window to the last, with no downward trend.
+Kalman-PO2 similarly settles at 15--21\% above PO2 throughout,
+confirming that the advantage seen in the 500-request pilot
+(\S\ref{sec:kalman}) does not persist to steady state.
+
+\begin{table}[h]
+\centering
+\caption{Convergence study (8$\times$ hetero, 4\,rps, 10\,K req).
+  Selected windows of 200 requests; full 50-window table in
+  accompanying repository.}
+\label{tab:conv}
+\small
+\begin{tabular}{@{}r r r r r@{}}
+\toprule
+Req window & PO2 (ms) & MPC (ms) & Kalman (ms) & MPC vs PO2 \\
+\midrule
+0--200     & 537.9 & 418.8 & 612.4 & \textbf{+22.1\%} \\
+200--400   & 289.7 & 330.7 & 325.3 & $-$14.2\% \\
+1000--1200 & 288.2 & 336.7 & 332.7 & $-$16.8\% \\
+3000--3200 & 289.3 & 331.7 & 331.9 & $-$14.7\% \\
+5000--5200 & 288.4 & 332.5 & 342.7 & $-$15.3\% \\
+7000--7200 & 282.9 & 330.5 & 336.3 & $-$16.8\% \\
+9800--10000& 282.9 & 335.6 & 324.4 & $-$18.6\% \\
+\midrule
+\textbf{Overall} & \textbf{291.8} & \textbf{338.2} & \textbf{342.9}
+  & $-$\textbf{15.9\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Root Cause Analysis}
+
+The convergence failure reveals a fundamental mismatch between the MPC
+design and the routing problem. At 4\,rps with 8$\times$ heterogeneity,
+our log analysis shows PO2 routes 49\%/51\% across the two servers by
+request count, yet achieves mean latency of 289\,ms --- almost identical
+to LOR. This is because PO2 \emph{routes opportunistically}, sending
+short requests to whichever server happens to be available.  The slow
+server's higher latency means it is sampled as higher-load more often,
+so PO2 naturally deflects the longest-running requests away from it.
+The EMA rate estimator, operating on a 300\,ms window at 4\,rps, sees
+fewer than 1 completion per server per window --- insufficient to
+distinguish a slow server from a temporarily busy fast server.  There is
+effectively no exploitable signal for MPC.
+
+MPC's overhead then makes things worse: the regularization term
+$\lambda(w_k-1)^2$ biases weights toward 1.0, occasionally sending
+extra traffic to the slow server that PO2 would have deflected.
+
+% -----------------------------------------------------------------------
+\section{Related Work}
+% -----------------------------------------------------------------------
+
+\textbf{LLM Serving.}
+PagedAttention \cite{vllm} and continuous batching \cite{orca} established
+the modern vLLM serving stack. Disaggregated PD architectures
+\cite{splitwise,distserve,mooncake} separate prefill and decode for
+independent scaling. Sarathi-Serve \cite{sarathi} addresses prefill-decode
+interference via chunked prefills.
+
+\textbf{Load Balancing.}
+PO2 \cite{po2} achieves $O(\log \log n)$ maximum queue depth.
+vLLM-router \cite{vllm_router} implements round-robin, PO2, consistent
+hashing, and cache-aware routing with an approximate radix tree for prefix
+affinity. Our work shows that naive MPC over queue-depth signals does not
+improve on PO2, and identifies what richer signals would be needed.
+
+\textbf{MPC for Systems.}
+MPC \cite{mpc_book} with OSQP \cite{osqp} enables sub-millisecond
+constrained optimization. Its application to LLM routing is nascent;
+our study characterizes the conditions under which a queue-depth feedback
+signal is insufficient.
+
+% -----------------------------------------------------------------------
+\section{Kalman-PO2: Validating the Diagnosis}
+\label{sec:kalman}
+% -----------------------------------------------------------------------
+
+The root cause analysis points to a concrete fix: replace queue-depth
+(which is masked by PO2's implicit balancing) with \emph{observed
+request latency} as the routing signal. Latency remains discriminative
+even when queues are balanced, because a capacity-constrained server
+(\texttt{max-num-seqs}$=8$) takes longer per request regardless of
+queue depth --- it batches fewer requests per step.
+
+We implement \textbf{Kalman-PO2}: a PO2-style router where the
+server-selection score is the Kalman-filtered estimate of each server's
+mean request latency, rather than weighted inflight count. The Kalman
+state per server is:
+\[
+  \hat{L}_{k|k} = \hat{L}_{k-1|k-1} + K_k(z_k - \hat{L}_{k-1|k-1}),
+  \quad K_k = \frac{P_{k|k-1}}{P_{k|k-1} + R}
+\]
+where $z_k$ is the observed latency of completed request $k$,
+$Q=400\,\text{ms}^2$ (process noise), $R=3600\,\text{ms}^2$
+(measurement noise), $\hat{L}_0=350\,\text{ms}$, and
+$P_0=40{,}000\,\text{ms}^2$ (high initial uncertainty for fast cold
+start). Routing: sample two servers, pick lower $\hat{L}$. No QP, no
+arrival rate estimation, no regularization.
+
+\subsection{Short-Run Results (500 Requests)}
+\label{sec:kalman-short}
+
+Table~\ref{tab:kalman} compares all three policies at 8$\times$
+heterogeneity with 500 warm-server requests. Kalman-PO2 achieves lower
+mean (327\,ms vs.\ 386\,ms) and dramatically lower P99 (410\,ms vs.\
+4,527\,ms for PO2), and outperforms MPC-PO2 as well.
+
+\begin{table}[h]
+\centering
+\caption{8$\times$ heterogeneity, 4\,rps, 500\,req. Kalman filter
+         converged estimates: fast=309\,ms, slow=366\,ms.}
+\label{tab:kalman}
+\small
+\begin{tabular}{@{}l r r r@{}}
+\toprule
+Policy & Mean (ms) & Stdev (ms) & P99 (ms) \\
+\midrule
+PO2        & 386.6 & 583.9 & 4527.2 \\
+MPC-PO2    & 334.2 &  44.2 &  446.2 \\
+\textbf{Kalman-PO2} & \textbf{327.0} & \textbf{36.3} & \textbf{410.1} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Log-level analysis reveals the mechanism and its limitations. With
+only two servers, \texttt{random.sample(pool,\,2)} always returns
+both, so routing is deterministic: always pick the server with the
+lower Kalman estimate. Three phases emerge: (i)~\emph{convergence}
+(req~0--50, 80\% fast), (ii)~\emph{stable fast-routing}
+(req~50--300, 100\% fast, mean$\approx$309\,ms), and
+(iii)~\emph{partial inversion} (req~300--500, $\sim$64\% fast,
+mean$\approx$330\,ms). During phase~(iii), concentrating load on
+the fast server inflates \emph{its} observed latency above the slow
+server's, causing the Kalman estimate to partially invert. This
+feedback instability is a fundamental limitation: a latency signal
+measures \emph{experienced} latency, not \emph{intrinsic} capacity.
+Kalman-PO2 nonetheless wins over PO2 in this run because PO2's
+variance is much larger ($\sigma=584$\,ms): PO2 produces 16 requests
+$>$1\,s (4.4\%) and a 4,527\,ms P99 from periodic bursts to the slow
+server.
+
+\subsection{Long-Run Behavior (10,000 Requests)}
+
+The 10,000-request convergence study (\S\ref{sec:results}, Table~\ref{tab:conv})
+reveals the steady-state picture. With a fresh server restart,
+Kalman-PO2 settles into an equilibrium routing $\approx$62\% of
+requests to the fast server. This stable partial-routing avoids the
+burst inversions seen in the short run, but it also eliminates
+Kalman's advantage: at steady state, mean=342.9\,ms vs.\
+PO2=291.8\,ms ($-$17.5\%). The gap is indistinguishable from MPC-PO2
+(338.2\,ms). Both Kalman and MPC remain 15--20\% worse than PO2 for
+the entire 10,000-request run, with no convergence.
+
+The explanation is the same as for MPC: Kalman's latency signal reflects
+\emph{queue state}, not capacity. Under steady load at 4\,rps,
+the fast server's estimate rises as it absorbs more traffic, and
+the system finds a sub-optimal equilibrium rather than converging
+to a true capacity-proportional split.
+
+On homogeneous clusters (1$\times$), Kalman-PO2 incurs a 6.1\%
+overhead (315\,ms vs.\ 297\,ms) from the same concentration effect.
+An uncertainty-gated fallback to PO2 when
+$|\hat{L}_a - \hat{L}_b| < \sqrt{P_a + P_b}$ would address both
+pathologies --- left for future work.
+
+% -----------------------------------------------------------------------
+\section{Conclusions}
+\label{sec:conclusions}
+% -----------------------------------------------------------------------
+
+We show through experiment and repeated replication that the
+\emph{choice of feedback signal} is the critical variable in LLM
+request routing. Queue-depth is a sufficient statistic when load is
+moderate and servers are stationary --- PO2 already exploits it
+optimally, leaving nothing for MPC to improve.
+
+Switching to latency as the feedback signal (Kalman-PO2) yields a
+transient benefit: in short runs ($\leq$500 requests), Kalman-PO2
+eliminates PO2's burst variance ($\sigma$: 584\,ms$\to$36\,ms) and
+achieves a $10\times$ lower P99 (4,527$\to$410\,ms). But the
+10,000-request replication reveals that this advantage does not
+persist: Kalman-PO2 settles at the same $\sim$16\% overhead as MPC-PO2.
+Both signals measure \emph{experienced} rather than \emph{intrinsic}
+latency, and under sustained load PO2's implicit balancing eliminates
+any exploitable differential.
+
+\textbf{Takeaways for practitioners:}
+(1) At moderate load, PO2 is a robust baseline that is difficult to
+beat; spend complexity on signal selection, not controller design.
+(2) Latency-based routing is more discriminative than queue-depth in
+short-run scenarios but requires uncertainty gating to remain stable.
+(3) A feedback signal that encodes intrinsic capacity (e.g.\ time-to-first-token,
+or throughput-normalized completion rate) is needed for sustained gains.
+
+\textbf{Open directions:} uncertainty-gated fallback to PO2 when
+latency estimates overlap; TTFT-specific routing for prefill-decode
+disaggregated topologies; and evaluation under overload where PO2's
+implicit balancing itself breaks down.
+
+\section*{\st{Acknowledgments} Do Not Include in Submission}
+Do \textcolor{red}{\ul{\textbf{not}}} include acknowledgments in this blind-review version.
+
+\begingroup
+\let\itshape\upshape
+\bibliographystyle{abbrv}
+\bibliography{refs}
+\endgroup
+
+\end{document}
