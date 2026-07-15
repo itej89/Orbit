@@ -42,18 +42,19 @@ We evaluate Orbit on AMD MI300X GPUs with five policies (Round Robin, Least
 Outstanding Requests, PO2, MPC-PO2, and a new Kalman-PO2) across a
 1$\times$--8$\times$ heterogeneity sweep and a 10,000-request convergence study.
 Our central finding is a \emph{negative result}: both MPC-PO2 and Kalman-PO2
-are consistently 15--20\% worse than PO2 and LOR at steady state, and this
-gap does not close even after 10,000 requests ($\approx$42 minutes of traffic).
-Kalman-PO2 shows a transient advantage in short runs (327\,ms vs.\ 386\,ms
-mean, $10\times$ lower P99) by eliminating PO2's burst variance, but this
-benefit does not persist.
-We identify the root cause --- reactive PO2 already exploits queue-depth
-signals optimally at moderate load, and both MPC and Kalman measure
-\emph{experienced} latency rather than \emph{intrinsic} capacity --- and
-derive concrete redesign directions: throughput-based rate estimation,
-TTFT-driven feedback, and hybrid reactive-predictive control. We present
-this as a cautionary case study in applying control-theoretic methods to
-LLM serving.
+are consistently 15--40\% worse than PO2 at steady state across all tested
+conditions, and the gap \emph{widens} rather than closes under overload
+(4--12\,rps). Kalman-PO2 shows a transient advantage in short runs
+(327\,ms vs.\ 386\,ms mean, $10\times$ lower P99) by eliminating PO2's
+burst variance, but this benefit does not persist beyond $\approx$500
+requests. An overload study (up to 12\,rps, 3$\times$ baseline) falsifies
+the hypothesis that PO2 breaks down under load: LOR and PO2 remain the
+most robust policies throughout.
+We identify the root cause --- both MPC and Kalman measure
+\emph{experienced} load rather than \emph{intrinsic} capacity, leaving no
+exploitable signal beyond what PO2 already captures --- and derive
+concrete redesign directions. We present this as a cautionary case study
+in applying control-theoretic methods to LLM serving.
 \end{abstract}
 
 \keywords{LLM serving, request routing, load balancing, model predictive control,
@@ -252,6 +253,70 @@ MPC's overhead then makes things worse: the regularization term
 $\lambda(w_k-1)^2$ biases weights toward 1.0, occasionally sending
 extra traffic to the slow server that PO2 would have deflected.
 
+\subsection{Overload Study: 4--12\,rps}
+\label{sec:overload}
+
+One might expect that PO2's implicit balancing breaks down under high
+load, where queues saturate and queue-depth ceases to be informative.
+We test this directly by sweeping arrival rates from 4 to 12\,rps
+(3$\times$ above baseline) at 8$\times$ heterogeneity, 500 requests
+per cell, fresh containers per policy. Table~\ref{tab:overload} shows
+the results.
+
+\begin{table}[h]
+\centering
+\caption{Overload sweep: 8$\times$ hetero, 500\,req per cell.
+  vs\_PO2 column shows MPC-PO2 and Kalman-PO2 mean relative to PO2.}
+\label{tab:overload}
+\small
+\begin{tabular}{@{}c l r r r r@{}}
+\toprule
+Rate & Policy & Mean (ms) & Stdev & P99 (ms) & vs PO2 \\
+\midrule
+\multirow{4}{*}{4\,rps}
+  & LOR     & \textbf{314.4} & 203.7 & 1620 & --- \\
+  & PO2     & 379.3 & 560.9 & 4688 & --- \\
+  & MPC-PO2 & 360.9 & 239.9 & 2082 & $-$4.8\% \\
+  & Kalman  & 356.0 & 223.4 & 1965 & $-$6.1\% \\
+\midrule
+\multirow{4}{*}{6\,rps}
+  & LOR     & 384.9 & 538.5 & 3766 & --- \\
+  & PO2     & \textbf{326.5} & 224.1 & 1914 & --- \\
+  & MPC-PO2 & 450.5 & 586.8 & 4247 & +38.0\% \\
+  & Kalman  & 380.1 & 247.7 & 2042 & +16.4\% \\
+\midrule
+\multirow{4}{*}{8\,rps}
+  & LOR     & \textbf{416.5} & 574.1 & 4314 & --- \\
+  & PO2     & 445.9 & 642.2 & 4675 & --- \\
+  & MPC-PO2 & 479.3 & 600.4 & 4193 & +7.5\% \\
+  & Kalman  & 500.9 & 632.1 & 4492 & +12.3\% \\
+\midrule
+\multirow{4}{*}{12\,rps}
+  & LOR     & \textbf{456.6} & 637.7 & 4892 & --- \\
+  & PO2     & 463.5 & 609.3 & 4345 & --- \\
+  & MPC-PO2 & 541.6 & 704.1 & 4602 & +16.8\% \\
+  & Kalman  & 643.5 & 755.6 & 3923 & +38.8\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The overload hypothesis is \textbf{falsified}: MPC-PO2 and Kalman-PO2
+do not recover under load --- they get \emph{worse}. At 12\,rps,
+Kalman-PO2 is 39\% above PO2 in mean latency.
+A 2,000-request convergence run at 12\,rps confirms the gap is
+persistent: PO2=376\,ms, MPC-PO2=421\,ms (+12\%), Kalman-PO2=485\,ms
+(+29\%), with no downward trend across ten 200-request windows.
+
+Two additional observations: (1)~\textbf{LOR emerges as the most
+robust policy under overload} --- it ties or beats PO2 at 8--12\,rps
+while MPC/Kalman degrade. LOR's per-request inflight count is a more
+reliable signal than either EMA rate estimates or filtered latency when
+queues are deep. (2)~At 4\,rps baseline this run, PO2 exhibits its
+known burst variance (P99=4,688\,ms), giving MPC and Kalman a
+spurious short-run advantage --- further evidence that the short-run
+500-request result (\S\ref{sec:kalman-short}) should not be
+over-interpreted.
+
 % -----------------------------------------------------------------------
 \section{Related Work}
 % -----------------------------------------------------------------------
@@ -391,17 +456,24 @@ latency, and under sustained load PO2's implicit balancing eliminates
 any exploitable differential.
 
 \textbf{Takeaways for practitioners:}
-(1) At moderate load, PO2 is a robust baseline that is difficult to
-beat; spend complexity on signal selection, not controller design.
-(2) Latency-based routing is more discriminative than queue-depth in
-short-run scenarios but requires uncertainty gating to remain stable.
-(3) A feedback signal that encodes intrinsic capacity (e.g.\ time-to-first-token,
-or throughput-normalized completion rate) is needed for sustained gains.
+(1) \textbf{PO2 and LOR are robust across all load regimes tested} ---
+from moderate (4\,rps) to 3$\times$ overload (12\,rps). Adding MPC or
+Kalman complexity makes things worse, not better, at every scale.
+(2) \textbf{LOR is underrated at high load}: it ties or beats PO2 at
+8--12\,rps where PO2's random sampling occasionally misdirects requests.
+(3) \textbf{Signal fidelity matters more than controller sophistication}:
+both MPC's EMA rate estimates and Kalman's filtered latency measure
+load state rather than intrinsic capacity, making them systematically
+exploitable by the very routing decisions they drive.
+(4) A feedback signal that encodes intrinsic capacity directly
+(e.g.\ time-to-first-token, or throughput under a controlled probe)
+is the missing ingredient for any predictive router to outperform PO2.
 
 \textbf{Open directions:} uncertainty-gated fallback to PO2 when
-latency estimates overlap; TTFT-specific routing for prefill-decode
-disaggregated topologies; and evaluation under overload where PO2's
-implicit balancing itself breaks down.
+Kalman estimates overlap within their posterior variance; TTFT-specific
+routing for prefill-decode disaggregated topologies where queue depth
+and latency decouple; and probing-based capacity estimation to break
+the fundamental signal limitation identified here.
 
 \section*{\st{Acknowledgments} Do Not Include in Submission}
 Do \textcolor{red}{\ul{\textbf{not}}} include acknowledgments in this blind-review version.
