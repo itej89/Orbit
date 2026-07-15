@@ -231,6 +231,11 @@ def round_robin(pool):
     return pool[next(_rr_counter) % len(pool)]
 
 
+def least_outstanding(pool, inflight):
+    """Least Outstanding Requests: pick server with fewest inflight requests."""
+    return min(pool, key=lambda s: inflight[s["id"]])
+
+
 def weighted_po2(pool, inflight, weights):
     if len(pool) == 1:
         return pool[0]
@@ -240,6 +245,29 @@ def weighted_po2(pool, inflight, weights):
     score_a = inflight[a["id"]] / max(wa, 1e-6)
     score_b = inflight[b["id"]] / max(wb, 1e-6)
     return a if score_a <= score_b else b
+
+
+def prefix_aware(pool, inflight, weights, messages):
+    """Cache-aware routing: hash the first user message prefix to pick a
+    candidate server, then verify it is not overloaded vs. a random alternative.
+    Falls back to weighted_po2 if the preferred server is > 2x loaded."""
+    import hashlib
+    prefix = ""
+    for m in messages:
+        if isinstance(m, dict) and m.get("role") == "user":
+            content = m.get("content", "")
+            prefix = content[:128]  # first 128 chars as cache key
+            break
+    if not prefix:
+        return weighted_po2(pool, inflight, weights)
+
+    h = int(hashlib.md5(prefix.encode()).hexdigest(), 16)
+    preferred = pool[h % len(pool)]
+    # fallback to po2 if preferred is heavily overloaded
+    alt = random.choice([s for s in pool if s["id"] != preferred["id"]] or pool)
+    q_pref = inflight[preferred["id"]] / max(weights.get(preferred["id"], 1.0), 1e-6)
+    q_alt  = inflight[alt["id"]]      / max(weights.get(alt["id"], 1.0), 1e-6)
+    return preferred if q_pref <= q_alt * 2 else alt
 
 
 # ---------------------------------------------------------------------------
@@ -255,6 +283,15 @@ async def handle_single(api: str, request: Request):
     policy = app.state.policy["routing_policy"]
     if policy == "rr":
         server = round_robin(app.state.pool)
+    elif policy == "lor":
+        server = least_outstanding(app.state.pool, app.state.metrics["inflight"])
+    elif policy == "prefix":
+        server = prefix_aware(
+            app.state.pool,
+            app.state.metrics["inflight"],
+            app.state.policy["node_weights"],
+            req.get("messages", []),
+        )
     else:
         server = weighted_po2(
             app.state.pool,
@@ -423,7 +460,7 @@ def parse_args():
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=9000)
     parser.add_argument("--enable-mpc", action="store_true")
-    parser.add_argument("--policy", choices=["rr", "po2", "mpc_po2"], default="po2",
+    parser.add_argument("--policy", choices=["rr", "po2", "lor", "prefix", "mpc_po2"], default="po2",
                         help="Routing policy: rr=round-robin, po2=power-of-2, mpc_po2=MPC-augmented PO2")
 
     sub = parser.add_subparsers(dest="mode", required=True)

@@ -1,0 +1,1796 @@
+========================================================
+  Orbit SET A — Ratio 4x (fast=64, slow=16)
+  Node   : useocpm2m-097-026
+  Results: /shared_inference/vpolamre/orbit/results/20260714_210152_setA
+  Start  : Tue Jul 14 09:09:28 PM UTC 2026
+========================================================
+[setup] Starting fast server (GPU 0, max-seqs=64)...
+Unable to find image 'vllm/vllm-openai-rocm:v0.23.0' locally
+v0.23.0: Pulling from vllm/vllm-openai-rocm
+33bae5e12c20: Pulling fs layer
+90e1c660d9cb: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+91cb05359046: Pulling fs layer
+ac1e5793ed12: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+2b9321fa8f54: Pulling fs layer
+74a56bbb240c: Pulling fs layer
+1306b8ac6348: Pulling fs layer
+154ba587689c: Pulling fs layer
+b3bec691ed4e: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+45cc5b408d3c: Pulling fs layer
+f1d25deb9b14: Pulling fs layer
+b25eb23261e8: Pulling fs layer
+f0ea756469f2: Pulling fs layer
+b5fe88ac3de5: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+89f5c229bed4: Pulling fs layer
+9de8ce35475d: Pulling fs layer
+7e91113ce501: Pulling fs layer
+51b610e1ca3a: Pulling fs layer
+5c05880020bf: Pulling fs layer
+16e7b86ae9b2: Pulling fs layer
+0ae0312d1134: Pulling fs layer
+b302c111af03: Pulling fs layer
+4f4fb700ef54: Already exists
+33bae5e12c20: Download complete
+4f4fb700ef54: Pull complete
+33bae5e12c20: Pull complete
+2b9321fa8f54: Download complete
+b5fe88ac3de5: Download complete
+154ba587689c: Download complete
+b302c111af03: Download complete
+89f5c229bed4: Download complete
+9de8ce35475d: Download complete
+1306b8ac6348: Download complete
+51b610e1ca3a: Download complete
+91cb05359046: Download complete
+0ae0312d1134: Download complete
+b3bec691ed4e: Download complete
+7e91113ce501: Download complete
+5c05880020bf: Download complete
+45cc5b408d3c: Download complete
+90e1c660d9cb: Download complete
+16e7b86ae9b2: Download complete
+74a56bbb240c: Download complete
+ac1e5793ed12: Download complete
+f0ea756469f2: Download complete
+ac1e5793ed12: Pull complete
+16e7b86ae9b2: Pull complete
+74a56bbb240c: Pull complete
+f1d25deb9b14: Download complete
+0ae0312d1134: Pull complete
+b3bec691ed4e: Pull complete
+b25eb23261e8: Download complete
+b25eb23261e8: Pull complete
+89f5c229bed4: Pull complete
+f0ea756469f2: Pull complete
+2b9321fa8f54: Pull complete
+45cc5b408d3c: Pull complete
+90e1c660d9cb: Pull complete
+b5fe88ac3de5: Pull complete
+154ba587689c: Pull complete
+5c05880020bf: Pull complete
+f1d25deb9b14: Pull complete
+51b610e1ca3a: Pull complete
+b302c111af03: Pull complete
+9de8ce35475d: Pull complete
+1306b8ac6348: Pull complete
+51b610e1ca3a: Pull complete
+91cb05359046: Pull complete
+7e91113ce501: Pull complete
+Digest: sha256:3813e31cc3ab56f71ba83a72da77a84f3c75030e54c9c316951a99317b818ce4
+Status: Downloaded newer image for vllm/vllm-openai-rocm:v0.23.0
+81754fd81ee79ec66efc1b32218fc8020c40f929ae827fc183231e782a1043f4
+[setup] Starting slow server (GPU 1, max-seqs=16)...
+35f3ff7df2316ccd3f7665147b96037faf6e75b74bbb6a7229fd2dc1e57180a7
+[setup] Waiting for both servers to be healthy...
+[setup] Both healthy after 31x5s
+
+---- Running 4x policies ----
+
+[run] 4x/rr — Tue Jul 14 09:13:13 PM UTC 2026
+[router] python3 /shared_inference/vpolamre/orbit/orbit_router.py --port 9000 --policy rr  single --servers 127.0.0.1:8000 127.0.0.1:8002
+INFO:     Started server process [4106665]
+INFO:     Waiting for application startup.
+INFO:__main__:Single-pool mode: 2 servers, MPC=False
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:9000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:36540 - "GET /health HTTP/1.1" 200 OK
+[router] up (10s)
+[bench] CMD: python3 /shared_inference/vpolamre/orbit/run_benchmark.py --router http://127.0.0.1:9000 --model /shared_inference/models/Qwen/Qwen3-8B         --arrival-rate 4.0 --num-requests 120 --max-tokens 50         --label hetero_4x_rr --output /shared_inference/vpolamre/orbit/results/20260714_210152_setA/hetero_4x_rr.json
+
+Orbit Benchmark: hetero_4x_rr
+  Router       : http://127.0.0.1:9000
+  Arrival rate : 4.0 req/s (Poisson)
+  Requests     : 120
+  Max tokens   : 50
+
+  dispatched 1/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 2/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 3/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 4/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 5/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47822 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 6/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47832 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 7/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 8/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47842 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 9/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 10/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47870 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 11/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 12/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 13/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 14/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 15/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 16/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 17/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 18/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 19/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 20/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 21/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 22/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 23/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 24/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 25/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 26/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 27/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 28/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 29/120INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 30/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 31/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 32/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 33/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 34/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 35/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 36/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 37/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 38/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 39/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 40/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 41/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 42/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 43/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 44/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 45/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 46/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 47/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 48/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 49/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:44982 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 50/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:44988 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 51/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 52/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 53/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 54/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 55/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 56/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 57/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 58/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 59/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 60/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 61/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 62/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 63/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 64/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 65/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 66/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 67/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 68/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 69/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 70/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 71/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 72/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 73/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 74/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 75/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 76/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 77/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 78/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 79/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 80/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 81/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 82/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 83/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 84/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 85/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 86/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 87/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 88/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 89/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 90/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 91/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 92/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 93/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 94/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 95/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 96/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 97/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 98/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 99/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 100/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 101/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 102/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:56496 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 103/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 104/120  dispatched 105/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 106/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 107/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 108/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 109/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:56496 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 110/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 111/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 112/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 113/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 114/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 115/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 116/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 117/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 118/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 119/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:47812 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 120/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:47786 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+
+
+  [hetero_4x_rr]
+    N ok/err : 120 / 0
+    Mean     : 374.7 ms
+    Median   : 280.7 ms
+    Stdev    : 373.3 ms
+    P90      : 323.7 ms
+    P95      : 1394.0 ms
+    P99      : 2580.4 ms
+
+  Saved → /shared_inference/vpolamre/orbit/results/20260714_210152_setA/hetero_4x_rr.json
+[metrics:hetero_4x_rr]
+INFO:     127.0.0.1:48206 - "GET /metrics HTTP/1.1" 200 OK
+{
+    "mode": "single",
+    "routing_policy": "rr",
+    "mpc_enabled": false,
+    "arrival_rate": 3.4514459043366443,
+    "latency_ms": 275.7964281785107,
+    "servers": [
+        {
+            "id": 0,
+            "host": "127.0.0.1",
+            "port": 8000,
+            "inflight": 0,
+            "weight": 1.0,
+            "service_rate": 1.980691129685982
+        },
+        {
+            "id": 1,
+            "host": "127.0.0.1",
+            "port": 8002,
+            "inflight": 0,
+            "weight": 1.0,
+            "service_rate": 1.7158050473072852
+        }
+    ],
+    "mpc_weights": {
+        "0": 1.0,
+        "1": 1.0
+    }
+}
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4106665]
+
+[run] 4x/lor — Tue Jul 14 09:14:01 PM UTC 2026
+[router] python3 /shared_inference/vpolamre/orbit/orbit_router.py --port 9000 --policy lor  single --servers 127.0.0.1:8000 127.0.0.1:8002
+INFO:     Started server process [4107272]
+INFO:     Waiting for application startup.
+INFO:__main__:Single-pool mode: 2 servers, MPC=False
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:9000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:48248 - "GET /health HTTP/1.1" 200 OK
+[router] up (4s)
+[bench] CMD: python3 /shared_inference/vpolamre/orbit/run_benchmark.py --router http://127.0.0.1:9000 --model /shared_inference/models/Qwen/Qwen3-8B         --arrival-rate 4.0 --num-requests 120 --max-tokens 50         --label hetero_4x_lor --output /shared_inference/vpolamre/orbit/results/20260714_210152_setA/hetero_4x_lor.json
+
+Orbit Benchmark: hetero_4x_lor
+  Router       : http://127.0.0.1:9000
+  Arrival rate : 4.0 req/s (Poisson)
+  Requests     : 120
+  Max tokens   : 50
+
+  dispatched 1/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 2/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 3/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 4/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 5/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 6/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 7/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 8/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 9/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 10/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39368 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 11/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 12/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 13/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 14/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 15/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 16/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 17/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 18/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 19/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39368 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 20/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39382 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 21/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39398 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 22/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 23/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 24/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 25/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 26/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 27/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 28/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 29/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 30/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 31/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 32/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 33/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 34/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 35/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 36/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 37/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 38/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 39/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 40/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 41/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:54232 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 42/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 43/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 44/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 45/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 46/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 47/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 48/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 49/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 50/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 51/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 52/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 53/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 54/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 55/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 56/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 57/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 58/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 59/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 60/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:54232 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 61/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:54244 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 62/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:54260 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 63/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:54276 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 64/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 65/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 66/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 67/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 68/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 69/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:54232 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 70/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 71/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 72/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 73/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 74/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 75/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 76/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 77/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 78/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 79/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 80/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:54232 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 81/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 82/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 83/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 84/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 85/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 86/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 87/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 88/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 89/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 90/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 91/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 92/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 93/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 94/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 95/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 96/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 97/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 98/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:54232 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 99/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 100/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 101/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 102/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 103/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 104/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 105/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 106/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 107/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 108/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 109/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 110/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 111/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 112/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:54232 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 113/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 114/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 115/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39366 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 116/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:54232 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 117/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 118/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 119/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39346 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 120/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39352 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+
+
+  [hetero_4x_lor]
+    N ok/err : 120 / 0
+    Mean     : 289.3 ms
+    Median   : 278.5 ms
+    Stdev    : 21.7 ms
+    P90      : 316.3 ms
+    P95      : 330.1 ms
+    P99      : 355.7 ms
+
+  Saved → /shared_inference/vpolamre/orbit/results/20260714_210152_setA/hetero_4x_lor.json
+[metrics:hetero_4x_lor]
+INFO:     127.0.0.1:52082 - "GET /metrics HTTP/1.1" 200 OK
+{
+    "mode": "single",
+    "routing_policy": "lor",
+    "mpc_enabled": false,
+    "arrival_rate": 6.221452065184728,
+    "latency_ms": 283.6851471706782,
+    "servers": [
+        {
+            "id": 0,
+            "host": "127.0.0.1",
+            "port": 8000,
+            "inflight": 0,
+            "weight": 1.0,
+            "service_rate": 3.1313855942112543
+        },
+        {
+            "id": 1,
+            "host": "127.0.0.1",
+            "port": 8002,
+            "inflight": 0,
+            "weight": 1.0,
+            "service_rate": 3.067434209198567
+        }
+    ],
+    "mpc_weights": {
+        "0": 1.0,
+        "1": 1.0
+    }
+}
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4107272]
+
+[run] 4x/po2 — Tue Jul 14 09:14:43 PM UTC 2026
+[router] python3 /shared_inference/vpolamre/orbit/orbit_router.py --port 9000 --policy po2  single --servers 127.0.0.1:8000 127.0.0.1:8002
+INFO:     Started server process [4107821]
+INFO:     Waiting for application startup.
+INFO:__main__:Single-pool mode: 2 servers, MPC=False
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:9000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:42520 - "GET /health HTTP/1.1" 200 OK
+[router] up (3s)
+[bench] CMD: python3 /shared_inference/vpolamre/orbit/run_benchmark.py --router http://127.0.0.1:9000 --model /shared_inference/models/Qwen/Qwen3-8B         --arrival-rate 4.0 --num-requests 120 --max-tokens 50         --label hetero_4x_po2 --output /shared_inference/vpolamre/orbit/results/20260714_210152_setA/hetero_4x_po2.json
+
+Orbit Benchmark: hetero_4x_po2
+  Router       : http://127.0.0.1:9000
+  Arrival rate : 4.0 req/s (Poisson)
+  Requests     : 120
+  Max tokens   : 50
+
+  dispatched 1/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 2/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 3/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 4/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42558 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 5/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 6/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 7/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 8/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 9/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 10/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 11/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42558 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 12/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 13/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 14/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 15/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 16/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 17/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 18/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 19/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 20/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 21/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 22/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 23/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 24/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 25/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 26/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 27/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 28/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 29/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 30/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 31/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 32/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 33/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 34/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 35/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 36/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 37/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 38/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 39/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:39130 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 40/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 41/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 42/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 43/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 44/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 45/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 46/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 47/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 48/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 49/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 50/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 51/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 52/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 53/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 54/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:39130 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 55/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 56/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 57/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 58/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 59/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 60/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 61/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 62/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 63/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 64/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 65/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 66/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 67/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 68/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 69/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 70/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 71/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 72/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 73/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 74/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 75/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 76/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 77/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 78/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:58160 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 79/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:58172 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 80/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 81/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 82/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 83/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 84/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 85/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 86/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 87/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 88/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:58160 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 89/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 90/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 91/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 92/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 93/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 94/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 95/120  dispatched 96/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:58160 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 97/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 98/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 99/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 100/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:58160 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 101/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:58178 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 102/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 103/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 104/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 105/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 106/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 107/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 108/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 109/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 110/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 111/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 112/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 113/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 114/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 115/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 116/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42542 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 117/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42546 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 118/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 119/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 120/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:42530 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+
+
+  [hetero_4x_po2]
+    N ok/err : 120 / 0
+    Mean     : 286.5 ms
+    Median   : 279.0 ms
+    Stdev    : 17.8 ms
+    P90      : 315.3 ms
+    P95      : 321.2 ms
+    P99      : 339.9 ms
+
+  Saved → /shared_inference/vpolamre/orbit/results/20260714_210152_setA/hetero_4x_po2.json
+[metrics:hetero_4x_po2]
+INFO:     127.0.0.1:49242 - "GET /metrics HTTP/1.1" 200 OK
+{
+    "mode": "single",
+    "routing_policy": "po2",
+    "mpc_enabled": false,
+    "arrival_rate": 3.0389940005102787,
+    "latency_ms": 281.1094085484682,
+    "servers": [
+        {
+            "id": 0,
+            "host": "127.0.0.1",
+            "port": 8000,
+            "inflight": 0,
+            "weight": 1.0,
+            "service_rate": 1.6342084802055818
+        },
+        {
+            "id": 1,
+            "host": "127.0.0.1",
+            "port": 8002,
+            "inflight": 0,
+            "weight": 1.0,
+            "service_rate": 2.4082882886872854
+        }
+    ],
+    "mpc_weights": {
+        "0": 1.0,
+        "1": 1.0
+    }
+}
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4107821]
+
+[run] 4x/mpc_po2 — Tue Jul 14 09:15:26 PM UTC 2026
+[router] python3 /shared_inference/vpolamre/orbit/orbit_router.py --port 9000 --policy mpc_po2 --enable-mpc single --servers 127.0.0.1:8000 127.0.0.1:8002
+INFO:     Started server process [4108326]
+INFO:     Waiting for application startup.
+INFO:__main__:Single-pool mode: 2 servers, MPC=True
+INFO:__main__:MPC control loop started
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:9000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:48040 - "GET /health HTTP/1.1" 200 OK
+[router] up (3s)
+[bench] CMD: python3 /shared_inference/vpolamre/orbit/run_benchmark.py --router http://127.0.0.1:9000 --model /shared_inference/models/Qwen/Qwen3-8B         --arrival-rate 4.0 --num-requests 120 --max-tokens 50         --label hetero_4x_mpc_po2 --output /shared_inference/vpolamre/orbit/results/20260714_210152_setA/hetero_4x_mpc_po2.json
+
+Orbit Benchmark: hetero_4x_mpc_po2
+  Router       : http://127.0.0.1:9000
+  Arrival rate : 4.0 req/s (Poisson)
+  Requests     : 120
+  Max tokens   : 50
+
+  dispatched 1/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 2/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 3/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 4/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 5/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 6/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 7/120INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 8/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 9/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 10/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 11/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 12/120  dispatched 13/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48084 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 14/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 15/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 16/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 17/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 18/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 19/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 20/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 21/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 22/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 23/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 24/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 25/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 26/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 27/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 28/120INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 29/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 30/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 31/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 32/120  dispatched 33/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 34/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 35/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 36/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 37/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 38/120  dispatched 39/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:51942 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 40/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 41/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 42/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 43/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 44/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 45/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 46/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 47/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 48/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 49/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 50/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 51/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 52/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 53/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 54/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 55/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 56/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 57/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 58/120INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 59/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 60/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 61/120  dispatched 62/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 63/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 64/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 65/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 66/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:51880 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 67/120INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:51892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 68/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 69/120INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 70/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 71/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:51880 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 72/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 73/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 74/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 75/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 76/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 77/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 78/120INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 79/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 80/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 81/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 82/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 83/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 84/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 85/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 86/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 87/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 88/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 89/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 90/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 91/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 92/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 93/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 94/120INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 95/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 96/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 97/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 98/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 99/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 100/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 101/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 102/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 103/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 104/120INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 105/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 106/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 107/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 108/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48072 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 109/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 110/120INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:54174 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 111/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 112/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 113/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 114/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 115/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 116/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 117/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 118/120INFO:__main__:→ server 1 (127.0.0.1:8002)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  dispatched 119/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48058 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8002/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+  dispatched 120/120INFO:__main__:→ server 0 (127.0.0.1:8000)
+INFO:     127.0.0.1:48052 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/v1/chat/completions "HTTP/1.1 200 OK"
+
+
+  [hetero_4x_mpc_po2]
+    N ok/err : 120 / 0
+    Mean     : 329.1 ms
+    Median   : 314.6 ms
+    Stdev    : 47.0 ms
+    P90      : 410.3 ms
+    P95      : 423.3 ms
+    P99      : 445.2 ms
+
+  Saved → /shared_inference/vpolamre/orbit/results/20260714_210152_setA/hetero_4x_mpc_po2.json
+[metrics:hetero_4x_mpc_po2]
+INFO:     127.0.0.1:54186 - "GET /metrics HTTP/1.1" 200 OK
+{
+    "mode": "single",
+    "routing_policy": "mpc_po2",
+    "mpc_enabled": true,
+    "arrival_rate": 3.6176984167130617,
+    "latency_ms": 320.9187754100473,
+    "servers": [
+        {
+            "id": 0,
+            "host": "127.0.0.1",
+            "port": 8000,
+            "inflight": 0,
+            "weight": 2.4990507395090082,
+            "service_rate": 1.8894043859158425
+        },
+        {
+            "id": 1,
+            "host": "127.0.0.1",
+            "port": 8002,
+            "inflight": 0,
+            "weight": 2.5702449217173613,
+            "service_rate": 2.8923873780506626
+        }
+    ],
+    "mpc_weights": {
+        "0": 2.4990507395090082,
+        "1": 2.5702449217173613
+    }
+}
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4108326]
+vllm_fast
+vllm_slow
+[done] 4x complete — Tue Jul 14 09:16:11 PM UTC 2026

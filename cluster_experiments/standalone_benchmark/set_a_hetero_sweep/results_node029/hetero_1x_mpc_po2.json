@@ -1,0 +1,617 @@
+{
+  "stats": {
+    "label": "hetero_1x_mpc_po2",
+    "n_ok": 120,
+    "n_err": 0,
+    "mean_ms": 341.7516126219804,
+    "median_ms": 331.0637690592557,
+    "stdev_ms": 47.434692484864364,
+    "p90_ms": 416.30457900464535,
+    "p95_ms": 423.8990764133632,
+    "p99_ms": 444.245261605829,
+    "min_ms": 269.2698482424021,
+    "max_ms": 448.5210250131786
+  },
+  "raw": [
+    {
+      "latency": 290.30785895884037,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 277.9441452585161,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 279.1724819689989,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 270.2207318507135,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 274.26951518282294,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 320.3949583694339,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 313.6076866649091,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 354.82891788706183,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 288.6122250929475,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 314.30043233558536,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 330.2982049062848,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 324.1432518698275,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 319.85062593594193,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 397.1714968793094,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 347.5697562098503,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 436.29832565784454,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 349.228591658175,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 319.40119806677103,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 307.6195679605007,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 398.7540863454342,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 317.07402179017663,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 305.97091000527143,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 312.63790279626846,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 444.245261605829,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 419.26739271730185,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 307.88859026506543,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 334.3771263025701,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 411.75313387066126,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 389.5696187391877,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 279.2173968628049,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 306.82498728856444,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 386.4647140726447,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 371.6783719137311,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 306.6456480883062,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 323.8104721531272,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 311.73771899193525,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 279.48362892493606,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 291.31687618792057,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 300.67664198577404,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 277.77689322829247,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 269.2698482424021,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 278.6191483028233,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 326.23702799901366,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 397.9502320289612,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 392.175180837512,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 281.4476937055588,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 308.7170161306858,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 349.94244389235973,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 292.1407208777964,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 302.1538332104683,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 277.6578371413052,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 304.3831349350512,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 387.61353120207787,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 335.7676020823419,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 302.9240248724818,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 322.36835500225425,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 339.76989798247814,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 340.6181368045509,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 372.4593580700457,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 418.02844079211354,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 414.614318870008,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 329.6491941437125,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 362.43037413805723,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 321.68904319405556,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 323.78397695720196,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 335.29534889385104,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 442.4695558845997,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 355.83606781437993,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 344.49239587411284,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 347.2706922329962,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 365.18122581765056,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 391.01954409852624,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 281.2006059102714,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 328.9023321121931,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 388.2860420271754,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 312.4835528433323,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 416.9710502028465,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 416.30457900464535,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 308.97477408871055,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 374.8768400400877,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 350.84716230630875,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 425.0177023932338,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 311.3598059862852,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 423.8990764133632,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 307.6761909760535,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 278.26178492978215,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 352.30910684913397,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 319.1316556185484,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 387.0079517364502,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 347.62497805058956,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 316.00153306499124,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 319.5188189856708,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 343.21464505046606,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 279.98531330376863,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 288.6618240736425,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 399.7815898619592,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 331.82933321222663,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 413.32985693588853,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 406.92027611657977,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 301.72490514814854,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 359.50826993212104,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 311.13552721217275,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 272.8682882152498,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 417.2266237437725,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 334.93116684257984,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 396.85659436509013,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 381.431904155761,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 307.1469231508672,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 333.5459432564676,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 360.16117315739393,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 305.8882779441774,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 297.21847269684076,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 381.8420828320086,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 448.5210250131786,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 410.23380495607853,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 393.5191687196493,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 349.27270421758294,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 355.3938400000334,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 314.2718602903187,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "latency": 420.7300078123808,
+      "ok": true,
+      "status": 200
+    }
+  ]
+}
