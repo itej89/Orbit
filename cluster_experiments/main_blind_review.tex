@@ -105,62 +105,16 @@ and what signals would actually work.
 
 \subsection{System Architecture}
 
-Orbit is a FastAPI service between clients and a pool of vLLM servers.
-In \emph{single-pool} mode, each request goes to one server performing
-both prefill and decode. In \emph{PD-disaggregated} mode, the router
-selects a prefill and a decode server per request, injecting peer addresses
-into the request ID consumed by vLLM's KV-transfer connector.
-Four routing policies share the same infrastructure: \textbf{RR}
-(round-robin), \textbf{LOR} (min inflight count), \textbf{PO2} (sample
-two, pick lower weighted-inflight score), and \textbf{MPC-PO2} (PO2
-with MPC-computed per-server weights).
-
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[
-  node distance=0.5cm and 0.9cm,
-  every node/.style={font=\small},
-  box/.style={draw, rounded corners=3pt, minimum width=1.8cm,
-              minimum height=0.55cm, align=center, inner sep=4pt},
-  srv/.style={box, fill=blue!12},
-  rtr/.style={box, fill=orange!18, minimum width=2.4cm, minimum height=1.1cm},
-  ctl/.style={box, fill=yellow!25, minimum width=2.0cm},
-  cli/.style={box, fill=green!12},
-  arr/.style={-{Stealth[length=5pt]}, thick},
-  darr/.style={-{Stealth[length=5pt]}, thick, dashed, gray}
-]
-% Clients
-\node[cli] (cli) {Clients\\[-2pt]\scriptsize Poisson arrivals};
-
-% Router
-\node[rtr, right=0.9cm of cli] (rtr) {
-  \textbf{Orbit Router}\\[-2pt]
-  \scriptsize FastAPI proxy\\[-2pt]
-  \scriptsize RR \,|\, LOR \,|\, PO2\\[-2pt]
-  \scriptsize MPC-PO2 \,|\, Kalman-PO2
-};
-
-% Servers
-\node[srv, right=0.9cm of rtr, yshift=0.45cm]  (s0) {Server 0 (fast)\\[-2pt]\scriptsize GPU 0, seqs=64};
-\node[srv, right=0.9cm of rtr, yshift=-0.45cm] (s1) {Server 1 (slow)\\[-2pt]\scriptsize GPU 1, seqs$\leq$64};
-
-% Controller
-\node[ctl, below=0.45cm of rtr] (ctl) {\scriptsize MPC: QP/100\,ms\\[-2pt]\scriptsize Kalman filter};
-
-% Arrows
-\draw[arr] (cli) -- (rtr);
-\draw[arr] (rtr.east) |- (s0.west);
-\draw[arr] (rtr.east) |- (s1.west);
-\draw[darr] (s0.south) -- ++(0,-0.25) -| (ctl.east);
-\draw[darr] (s1.north) -- ++(0, 0.15) -| (ctl.east);
-\draw[darr] (ctl.west) -- (rtr.south);
-\end{tikzpicture}
-\caption{Orbit architecture. The FastAPI router applies a configurable
-  policy; MPC-PO2 additionally runs an OSQP quadratic program every
-  100\,ms using EMA service-rate estimates; Kalman-PO2 maintains a
-  per-server Kalman filter on observed request latency (dashed = feedback).}
-\label{fig:arch}
-\end{figure}
+Orbit is a FastAPI proxy between clients and a pool of vLLM servers.
+All experiments in this paper use \emph{single-pool} mode: each request
+is dispatched to one server that handles both prefill and decode.
+The router tracks per-server inflight counts and applies one of five
+policies: \textbf{RR} (round-robin), \textbf{LOR} (min inflight),
+\textbf{PO2} (sample two, pick lower weighted-inflight score),
+\textbf{MPC-PO2} (PO2 with MPC-computed weights), and
+\textbf{Kalman-PO2} (PO2 with Kalman-filtered latency scores).
+Orbit also supports prefill-decode disaggregated topologies as a
+deployment option, though evaluation of that mode is left for future work.
 
 \subsection{MPC Weight Controller}
 
@@ -174,9 +128,8 @@ The horizon-$H$ QP is:
     + \lambda(w_k - 1)^2 \right] \label{eq:mpc} \\
 \text{s.t.} \quad
   & q_{k+1} = q_k + \Delta t \cdot
-    \tfrac{\lambda_a p_i - \hat{\mu}_i}{\bar{q}},\quad
-    q_{k+1} \geq 0,\quad
-    w_{\min} \leq w_k \leq w_{\max} \notag
+    \tfrac{\lambda_a p_i - \hat{\mu}_i}{\bar{q}},\notag\\
+  & q_{k+1} \geq 0,\quad w_{\min} \leq w_k \leq w_{\max} \notag
 \end{align}
 
 \noindent where $\lambda_a$ is the arrival rate, $p_i = w_k/\sum_j w_j$
@@ -194,11 +147,17 @@ prevents extreme weights during estimation warm-up \cite{mpc_book}.
 
 All experiments run on AMD MI300X nodes (192\,GB HBM3/GPU) with
 vLLM v0.23.0 ROCm, serving Qwen3-8B in bfloat16 (\texttt{max-model-len=2048},
-\texttt{gpu-memory-utilization=0.15}). Heterogeneity is simulated via two
-vLLM servers on separate GPUs:
-\textbf{Server 0 (fast):} \texttt{max-num-seqs=64} (fixed);
-\textbf{Server 1 (slow):} \texttt{max-num-seqs} $\in \{64,32,16,8\}$,
+\texttt{gpu-memory-utilization=0.15}). Heterogeneity is simulated via two vLLM servers on separate GPUs
+by varying \texttt{max-num-seqs} --- vLLM's concurrency cap on how
+many sequences are batched per iteration.
+\textbf{Server 0:} \texttt{max-num-seqs=64} (fixed);
+\textbf{Server 1:} \texttt{max-num-seqs} $\in \{64,32,16,8\}$,
 yielding 1$\times$--8$\times$ capacity ratios.
+Importantly, this creates a \emph{queue-depth} bottleneck rather than
+a per-request compute speed difference: at light load (4\,rps) both
+servers process individual requests in $\approx$280\,ms, but the
+constrained server's queue fills faster under burst arrivals, producing
+occasional high-latency outliers that inflate P99.
 Requests follow Poisson arrivals at 4\,req/s with 15 fixed prompts
 (\texttt{max\_tokens=50}). The router is freshly restarted before each
 policy run so MPC starts with no prior EMA state.
